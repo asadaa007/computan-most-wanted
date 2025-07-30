@@ -1,0 +1,102 @@
+/* Quill Editor Styles */
+@import 'react-quill/dist/quill.snow.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Quill Editor Styling */
+.ql-editor {
+  min-height: 150px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #374151;
+}
+
+.ql-toolbar {
+  border-top: 1px solid #d1d5db;
+  border-left: 1px solid #d1d5db;
+  border-right: 1px solid #d1d5db;
+  border-bottom: none;
+  background-color: #f9fafb;
+  border-radius: 8px 8px 0 0;
+}
+
+.ql-container {
+  border-bottom: 1px solid #d1d5db;
+  border-left: 1px solid #d1d5db;
+  border-right: 1px solid #d1d5db;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  background-color: white;
+}
+
+.ql-editor.ql-blank::before {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* Fix for black background issue */
+.ql-snow .ql-toolbar button,
+.ql-snow.ql-toolbar button {
+  background: transparent;
+  border: none;
+  color: #374151;
+}
+
+.ql-snow .ql-toolbar button:hover,
+.ql-snow.ql-toolbar button:hover {
+  color: #1f2937;
+  background-color: #e5e7eb;
+}
+
+.ql-snow .ql-toolbar button.ql-active,
+.ql-snow.ql-toolbar button.ql-active {
+  color: #1f2937;
+  background-color: #d1d5db;
+}
+
+.ql-snow .ql-toolbar .ql-stroke {
+  stroke: currentColor;
+}
+
+.ql-snow .ql-toolbar .ql-fill {
+  fill: currentColor;
+}
+
+.ql-snow .ql-toolbar .ql-picker {
+  color: #374151;
+}
+
+.ql-snow .ql-toolbar .ql-picker-options {
+  background-color: white;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+/* Hide scrollbar for webkit browsers */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
