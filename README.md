@@ -177,7 +177,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Asad Ur Rehman**
 - GitHub: [@asadaa007](https://github.com/asadaa007)
-- Email: putjuttda286@gmail.com
+- Email: arehman@computan.net
 
 ## 🙏 Acknowledgments
 
