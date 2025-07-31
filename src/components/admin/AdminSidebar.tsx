@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { auth, db } from '../../firebase';
-import { signOut } from 'firebase/auth';
+import { signOut, onAuthStateChanged } from 'firebase/auth';
+import type { User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 
 interface NavItem {
@@ -38,25 +39,34 @@ export default function AdminSidebar() {
   const [currentUser, setCurrentUser] = useState<AdminUser | null>(null);
   const location = useLocation();
 
-  useEffect(() => {
-    loadCurrentUser();
-  }, []);
-
-  const loadCurrentUser = async () => {
+  const loadCurrentUser = async (user: User | null) => {
     try {
-      const user = auth.currentUser;
       if (user) {
         const userDoc = await getDoc(doc(db, 'adminUsers', user.uid));
         if (userDoc.exists()) {
           const userData = { id: userDoc.id, ...userDoc.data() } as AdminUser;
           setCurrentUser(userData);
+        } else {
+          setCurrentUser(null);
         }
-        // Removed automatic user creation to prevent duplicates
+      } else {
+        setCurrentUser(null);
       }
     } catch (error) {
       console.error('Error loading current user:', error);
+      setCurrentUser(null);
     }
   };
+
+  useEffect(() => {
+    // Listen for authentication state changes
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      loadCurrentUser(user);
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -95,6 +105,20 @@ export default function AdminSidebar() {
             </span>
           </button>
         </div>
+      </div>
+
+      {/* Visit Site Button */}
+      <div className="p-3 border-b border-secondary-300">
+        <button
+          onClick={() => window.open('/', '_blank')}
+          className={`w-full flex items-center justify-center space-x-2 p-2 text-black transition-colors duration-200 ${
+            isCollapsed ? 'justify-center' : 'justify-start'
+          }`}
+          title="Visit Site"
+        >
+          <i className="fas fa-external-link-alt text-sm"></i>
+          {!isCollapsed && <span className="text-sm font-medium">Visit Site</span>}
+        </button>
       </div>
 
       {/* Navigation */}
