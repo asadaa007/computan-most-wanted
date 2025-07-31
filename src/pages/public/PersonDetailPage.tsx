@@ -206,7 +206,7 @@ export default function PersonDetailPage() {
       />
 
       {/* Main Content */}
-      <div className="max-w-[1440px] mx-auto p-4 sm:p-0">
+      <div className="max-w-[1440px] mx-auto p-4 xl:p-0">
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Left Sidebar - Navigation and Person Cards */}
           <div className="lg:w-72 flex-shrink-0">
@@ -291,99 +291,87 @@ export default function PersonDetailPage() {
           {/* Right Side - Person Details */}
           <div className="flex-1">
             <div className="grid grid-cols-1 lg:grid-cols-5">
-              {/* Person Image */}
-              <div className="lg:col-span-2">
-                <div className="relative">
-                  <img 
-                    src={currentPerson.image} 
-                    alt={currentPerson.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.currentTarget as HTMLElement).style.display = 'none';
-                      ((e.currentTarget as HTMLElement).nextElementSibling as HTMLElement).style.display = 'flex';
-                    }}
-                  />
-                  <div className="hidden w-full aspect-square bg-gray-200 items-center justify-center text-6xl">
-                    👨‍💻
-                  </div>
-                  
-                  {/* Badges */}
-                  {/* Removed hardcoded badges */}
+              {/* Person Image - Background Container */}
+              <div className="lg:col-span-2 relative bg-cover bg-center bg-no-repeat" 
+                   style={{ backgroundImage: `url(${currentPerson.image})` }}>
+                {/* Fallback for when image fails to load */}
+                <div className="w-full h-full bg-gray-200 flex items-center justify-center text-6xl"
+                     style={{ display: currentPerson.image ? 'none' : 'flex' }}>
+                  👨‍💻
                 </div>
               </div>
 
               {/* Person Details */}
-              <div className="lg:col-span-3 bg-primary-400 p-6 flex flex-col justify-center">
+              <div className="lg:col-span-3 bg-primary-400 p-2 flex flex-col justify-center">
                 <h2 className="text-2xl font-bold text-black mb-4 border-b border-black pb-2">{currentPerson.name}</h2>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="space-y-2">
+                {/* Compact Info Layout */}
+                <div className="space-y-3">
+                  {/* Top Row - Key Info */}
+                  <div className="grid grid-cols-3 gap-3">
                     <div className="bg-white/20 backdrop-blur-sm p-3 border-l-2 border-black">
                       <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">POSITION</label>
                       <p className="text-sm font-semibold text-black">{currentPerson.position}</p>
                     </div>
-                    
                     <div className="bg-white/20 backdrop-blur-sm p-3 border-l-2 border-black">
                       <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">DEPARTMENT</label>
                       <p className="text-sm font-semibold text-black">{currentPerson.department}</p>
                     </div>
-                    
+                    <div className="bg-white/20 backdrop-blur-sm p-3 border-l-2 border-black">
+                      <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">COUNTRY</label>
+                      <p className="text-sm font-semibold text-black">{currentPerson.location}</p>
+                    </div>
+                  </div>
+
+                  {/* Middle Row - Personal Info */}
+                  <div className="grid grid-cols-3 gap-3">
                     <div className="bg-white/20 backdrop-blur-sm p-3 border-l-2 border-black">
                       <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">GENDER</label>
                       <p className="text-sm font-semibold text-black">{currentPerson.gender}</p>
                     </div>
-                    
                     <div className="bg-white/20 backdrop-blur-sm p-3 border-l-2 border-black">
-                      <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">DATE OF BIRTH</label>
-                      <p className="text-sm font-semibold text-black">{currentPerson.dateOfBirth} ({formatAge(currentPerson.dateOfBirth)} years)</p>
+                      <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">AGE</label>
+                      <p className="text-sm font-semibold text-black">{formatAge(currentPerson.dateOfBirth)} years</p>
                     </div>
-                    
+                    <div className="bg-white/20 backdrop-blur-sm p-3 border-l-2 border-black">
+                      <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">JOIN DATE</label>
+                      <p className="text-sm font-semibold text-black">{currentPerson.joinDate}</p>
+                    </div>
+                  </div>
+
+                  {/* Contact Row */}
+                  <div className="grid grid-cols-2 gap-3">
                     <div className="bg-white/20 backdrop-blur-sm p-3 border-l-2 border-black">
                       <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">EMAIL</label>
                       <p className="text-sm font-semibold text-black break-all">{currentPerson.email}</p>
                     </div>
-                    
                     <div className="bg-white/20 backdrop-blur-sm p-3 border-l-2 border-black">
                       <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">PHONE</label>
                       <p className="text-sm font-semibold text-black">{currentPerson.phone}</p>
                     </div>
                   </div>
-                  
-                  <div className="space-y-2">
-                    <div className="bg-white/20 backdrop-blur-sm p-3 border-l-2 border-black">
-                      <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">COUNTRY</label>
-                      <p className="text-sm font-semibold text-black">{currentPerson.location}</p>
+
+                  {/* Skills Row */}
+                  <div className="bg-white/20 backdrop-blur-sm p-3 border-l-2 border-black">
+                    <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">SKILLS</label>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {currentPerson.skills?.map((skill, index) => (
+                        <span key={index} className="px-2 py-1 bg-black text-white text-xs font-medium">
+                          {skill}
+                        </span>
+                      )) || <p className="text-sm font-semibold text-black">Not specified</p>}
                     </div>
-                    
-                    <div className="bg-white/20 backdrop-blur-sm p-3 border-l-2 border-black">
-                      <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">SKILLS</label>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {currentPerson.skills?.map((skill, index) => (
-                          <span key={index} className="px-2 py-1 bg-black text-white text-xs font-medium">
-                            {skill}
-                          </span>
-                        )) || <p className="text-sm font-semibold text-black">Not specified</p>}
-                      </div>
-                    </div>
-                    
+                  </div>
+
+                  {/* Bottom Row - Experience & Education */}
+                  <div className="grid grid-cols-2 gap-3">
                     <div className="bg-white/20 backdrop-blur-sm p-3 border-l-2 border-black">
                       <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">EXPERIENCE</label>
                       <p className="text-sm font-semibold text-black">{currentPerson.experience}</p>
                     </div>
-                    
                     <div className="bg-white/20 backdrop-blur-sm p-3 border-l-2 border-black">
                       <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">EDUCATION</label>
                       <p className="text-sm font-semibold text-black">{currentPerson.education}</p>
-                    </div>
-                    
-                    <div className="bg-white/20 backdrop-blur-sm p-3 border-l-2 border-black">
-                      <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">JOIN DATE</label>
-                      <p className="text-sm font-semibold text-black">{currentPerson.joinDate}</p>
-                    </div>
-                    
-                    <div className="bg-white/20 backdrop-blur-sm p-3 border-l-2 border-black">
-                      <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">LAST MODIFIED</label>
-                      <p className="text-sm font-semibold text-black">{currentPerson.lastModified}</p>
                     </div>
                   </div>
                 </div>
