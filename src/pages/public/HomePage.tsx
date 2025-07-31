@@ -99,6 +99,18 @@ export default function HomePage() {
         setShowSearchResults={setShowSearchResults}
       />
 
+      {/* Important Notice */}
+      <div className="py-8 px-4">
+        <div className="max-w-[1440px] mx-auto text-center">
+          <p className="text-base font-bold text-white mb-2">
+            All team members displayed on this website are professional employees of Computan!
+          </p>
+          <p className="text-sm text-white">
+            Please respect their privacy and professional boundaries. For business inquiries, contact us through our official channels.
+          </p>
+        </div>
+      </div>
+
       {/* Main Content */}
       <main className="max-w-[1440px] mx-auto p-4 sm:p-8">
         {loading ? (
