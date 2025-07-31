@@ -1,8 +1,9 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createBrowserRouter } from 'react-router-dom';
 import PublicLayout from '../layouts/public/PublicLayout';
 import AdminLayout from '../layouts/admin/AdminLayout';
 import HomePage from '../pages/public/HomePage';
 import PersonDetailPage from '../pages/public/PersonDetailPage';
+import NotFound from '../pages/NotFound';
 import AdminLogin from '../pages/admin/AdminLogin';
 import AdminDashboard from '../pages/admin/AdminDashboard';
 import ManageEmployees from '../pages/admin/ManageEmployees';
@@ -103,6 +104,6 @@ export const router = createBrowserRouter([
   },
   {
     path: '*',
-    element: <Navigate to="/" replace />,
+    element: <NotFound />,
   },
 ]); 
