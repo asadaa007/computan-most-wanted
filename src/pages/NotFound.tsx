@@ -17,14 +17,14 @@ const NotFound: React.FC = () => {
 
           {/* Title */}
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            WANTED: Missing Page
+            Page Not Found
           </h2>
 
           {/* Description */}
           <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            This page has gone rogue and is currently on the run! 
-            Our detectives are working hard to track it down, but for now, 
-            you might want to head back to safer territory.
+            Oops! The page you're looking for seems to have taken a different path. 
+            It might have been moved, deleted, or never existed. 
+            Let's get you back on track to find what you need.
           </p>
 
           {/* Action Button */}
@@ -34,7 +34,7 @@ const NotFound: React.FC = () => {
               className="bg-primary-400 hover:bg-primary-500 text-black font-semibold px-8 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg inline-flex items-center gap-2"
             >
               <i className="fas fa-home"></i>
-              <span>Return to Safe Zone</span>
+              <span>Go to Homepage</span>
             </Link>
           </div>
         </div>
@@ -42,7 +42,7 @@ const NotFound: React.FC = () => {
         {/* Footer Note */}
         <div className="mt-8 text-center">
           <p className="text-gray-400 text-sm">
-            If you believe this page should exist, please contact our admin team.
+            If you believe this page should exist, please contact our support team.
           </p>
           <div className="flex items-center justify-center gap-2 mt-2">
             <img 

@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router-dom';
+import CookieConsent from '../../components/common/CookieConsent';
 // import PublicNavbar from '../../components/public/PublicNavbar';
 // import PublicFooter from '../../components/public/PublicFooter';
 
@@ -10,6 +11,7 @@ export default function PublicLayout() {
         <Outlet />
       </main>
       {/* <PublicFooter /> */}
+      <CookieConsent />
     </div>
   );
 } 

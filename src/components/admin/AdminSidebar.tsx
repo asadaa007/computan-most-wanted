@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { auth } from '../../firebase';
+import { auth, db } from '../../firebase';
 import { signOut } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 
 interface NavItem {
   name: string;
@@ -10,15 +11,52 @@ interface NavItem {
   badge?: string;
 }
 
+interface AdminUser {
+  id?: string;
+  uid: string;
+  email: string;
+  displayName: string;
+  role: 'master' | 'manager' | 'team_lead';
+  isActive: boolean;
+  createdAt: Date;
+  lastLogin?: Date;
+  department?: string;
+  phone?: string;
+}
+
 const navigation: NavItem[] = [
   { name: 'Dashboard', path: '/comp-admin/dashboard', icon: 'fas fa-chart-line' },
-  { name: 'Manage Employees', path: '/comp-admin/employees', icon: 'fas fa-users' },
+  { name: 'Team', path: '/comp-admin/employees', icon: 'fas fa-users' },
+  { name: 'Departments', path: '/comp-admin/departments', icon: 'fas fa-building' },
+  { name: 'Attendance', path: '/comp-admin/attendance', icon: 'fas fa-clock' },
   { name: 'Form Submissions', path: '/comp-admin/submissions', icon: 'fas fa-envelope' },
+  { name: 'Settings', path: '/comp-admin/settings', icon: 'fas fa-cog' },
 ];
 
 export default function AdminSidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [currentUser, setCurrentUser] = useState<AdminUser | null>(null);
   const location = useLocation();
+
+  useEffect(() => {
+    loadCurrentUser();
+  }, []);
+
+  const loadCurrentUser = async () => {
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        const userDoc = await getDoc(doc(db, 'adminUsers', user.uid));
+        if (userDoc.exists()) {
+          const userData = { id: userDoc.id, ...userDoc.data() } as AdminUser;
+          setCurrentUser(userData);
+        }
+        // Removed automatic user creation to prevent duplicates
+      }
+    } catch (error) {
+      console.error('Error loading current user:', error);
+    }
+  };
 
   const handleSignOut = async () => {
     try {
@@ -28,29 +66,29 @@ export default function AdminSidebar() {
     }
   };
 
-
-
   return (
     <div className={`bg-white border-r border-secondary-300 transition-all duration-300 flex flex-col h-full ${
       isCollapsed ? 'w-16' : 'w-64'
     }`}>
       {/* Header */}
-      <div className="p-4 border-b border-secondary-300">
+      <div className="p-3 border-b border-secondary-300">
         <div className="flex items-center justify-between">
           {!isCollapsed && (
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-secondary-800 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">C</span>
-              </div>
+              <img 
+                src="/computan-icon.webp" 
+                alt="Computan" 
+                className="w-8 h-8 "
+              />
               <div>
-                <h1 className="text-lg font-bold text-secondary-800">Computan Admin</h1>
-                <p className="text-xs text-secondary-600">Talent Management</p>
+                <h1 className="text-lg font-bold text-secondary-800">Admin Panel</h1>
+                <p className="text-xs text-secondary-600">Employee Management</p>
               </div>
             </div>
           )}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-2 rounded-lg hover:bg-secondary-100 transition-colors duration-200"
+            className="p-2  hover:bg-secondary-100 transition-colors duration-200"
           >
             <span className="text-secondary-600">
               {isCollapsed ? <i className="fas fa-chevron-right"></i> : <i className="fas fa-chevron-left"></i>}
@@ -67,18 +105,18 @@ export default function AdminSidebar() {
             <Link
               key={item.name}
               to={item.path}
-              className={`flex items-center space-x-3 px-3 py-3 rounded-xl transition-all duration-200 group ${
+              className={`flex items-center px-3 py-3  transition-all duration-200 group ${
                 isActive
                   ? 'bg-secondary-800 text-white shadow-lg'
                   : 'text-secondary-700 hover:bg-secondary-100'
-              }`}
+              } ${isCollapsed ? 'justify-center' : 'space-x-3'}`}
             >
               <i className={`${item.icon} text-xl`}></i>
               {!isCollapsed && (
                 <>
                   <span className="font-medium">{item.name}</span>
                   {item.badge && (
-                    <span className={`ml-auto px-2 py-1 text-xs rounded-full ${
+                    <span className={`ml-auto px-2 py-1 text-xs  ${
                       isActive
                         ? 'bg-white/20 text-white'
                         : 'bg-secondary-200 text-secondary-800'
@@ -96,24 +134,31 @@ export default function AdminSidebar() {
       {/* User Info and Logout */}
       <div className="mt-auto p-4 border-t border-secondary-300">
         <div className="flex items-center space-x-3 mb-3">
-          <div className="w-8 h-8 bg-secondary-800 rounded-full flex items-center justify-center">
-            <span className="text-white font-bold text-sm">A</span>
+          <div className="w-8 h-8 bg-secondary-800  flex items-center justify-center">
+            <span className="text-white font-bold text-sm">
+              {currentUser?.displayName?.charAt(0) || currentUser?.email?.charAt(0) || 'A'}
+            </span>
           </div>
           {!isCollapsed && (
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-secondary-800 truncate">
-                {auth.currentUser?.email || 'Admin User'}
+                {currentUser?.displayName || 'Admin User'}
               </p>
               <p className="text-xs text-secondary-600 truncate">
-                Administrator
+                {currentUser?.email || 'admin@example.com'}
               </p>
+              {currentUser && (
+                <p className="text-xs text-secondary-500 truncate">
+                  Role: {currentUser.role}
+                </p>
+              )}
             </div>
           )}
         </div>
         
         <button
           onClick={handleSignOut}
-          className={`w-full flex items-center justify-center space-x-2 p-2 rounded-lg bg-secondary-800 hover:bg-secondary-500 text-white transition-colors duration-200 ${
+          className={`w-full flex items-center justify-center space-x-2 p-2  bg-secondary-800 hover:bg-secondary-500 text-white transition-colors duration-200 ${
             isCollapsed ? 'justify-center' : 'justify-start'
           }`}
           title="Sign Out"

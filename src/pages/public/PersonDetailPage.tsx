@@ -1,194 +1,209 @@
-import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../../firebase';
+import Header from '../../components/common/Header';
+import { findPersonBySlug, createPersonSlug } from '../../utils/slugify';
 
 interface EmployeeCard {
-  id: number;
+  id: string;
   name: string;
-  role: string;
+  position: string;
+  department: string;
+  gender: string;
+  dateOfBirth: string;
+  age: number;
+  email: string;
+  phone: string;
+  location: string;
   skills: string[];
+  experience: string;
+  education: string;
+  bio: string;
   image: string;
+  linkedin: string;
+  github: string;
+  portfolio: string;
+  isActive: boolean;
+  joinDate: string;
+  lastModified: string;
   flag: string;
-  isRecentlyAdded?: boolean;
-  hasReward?: boolean;
-  operation?: string;
-  isArrested?: boolean;
 }
 
 export default function PersonDetailPage() {
-  const { id } = useParams();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showCookieNotice, setShowCookieNotice] = useState(true);
+  const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
+  const [employees, setEmployees] = useState<EmployeeCard[]>([]);
+  const [currentPerson, setCurrentPerson] = useState<EmployeeCard | null>(null);
+  const [loading, setLoading] = useState(true);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState<EmployeeCard[]>([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
 
-  const employees: EmployeeCard[] = [
-    {
-      id: 1,
-      name: "ALEXANDER, Sarah",
-      role: "Full Stack Developer",
-      skills: ["React", "Node.js", "TypeScript", "MongoDB"],
-      image: "/Sajeel.webp",
-      flag: "/flag.png",
-      isRecentlyAdded: true,
-      hasReward: true
-    },
-    {
-      id: 2,
-      name: "MARTINEZ, Carlos",
-      role: "DevOps Engineer",
-      skills: ["Docker", "Kubernetes", "AWS", "Jenkins"],
-      image: "/Sajeel.webp",
-      flag: "/flag.png",
-      isRecentlyAdded: true,
-      operation: "OPERATION CLOUD"
-    },
-    {
-      id: 3,
-      name: "JOHNSON, Emily",
-      role: "UI/UX Designer",
-      skills: ["Figma", "Adobe XD", "Sketch", "Prototyping"],
-      image: "/Sajeel.webp",
-      flag: "/flag.png",
-      isRecentlyAdded: true
-    },
-    {
-      id: 4,
-      name: "PATEL, Rajesh",
-      role: "Backend Developer",
-      skills: ["Python", "Django", "PostgreSQL", "Redis"],
-      image: "/Sajeel.webp",
-      flag: "/flag.png",
-      operation: "OPERATION DATABASE"
-    },
-    {
-      id: 5,
-      name: "WILLIAMS, Michael",
-      role: "Frontend Developer",
-      skills: ["Vue.js", "JavaScript", "CSS3", "Webpack"],
-      image: "/Sajeel.webp",
-      flag: "/flag.png"
-    },
-    {
-      id: 6,
-      name: "GARCIA, Maria",
-      role: "QA Engineer",
-      skills: ["Selenium", "Jest", "Cypress", "Postman"],
-      image: "/Sajeel.webp",
-      flag: "/flag.png",
-      hasReward: true
-    },
-    {
-      id: 7,
-      name: "ANDERSON, David",
-      role: "Mobile Developer",
-      skills: ["React Native", "Flutter", "iOS", "Android"],
-      image: "/Sajeel.webp",
-      flag: "/flag.png",
-      operation: "OPERATION MOBILE"
-    },
-    {
-      id: 8,
-      name: "TAYLOR, Jennifer",
-      role: "Data Scientist",
-      skills: ["Python", "TensorFlow", "Pandas", "SQL"],
-      image: "/Sajeel.webp",
-      flag: "/flag.png"
-    },
-    {
-      id: 9,
-      name: "BROWN, Robert",
-      role: "System Administrator",
-      skills: ["Linux", "Networking", "Security", "Monitoring"],
-      image: "/Sajeel.webp",
-      flag: "/flag.png",
-      isArrested: false
-    },
-    {
-      id: 10,
-      name: "DAVIS, Lisa",
-      role: "Product Manager",
-      skills: ["Agile", "Scrum", "JIRA", "Analytics"],
-      image: "/Sajeel.webp",
-      flag: "/flag.png"
+  const loadEmployees = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, 'employees'));
+      const employeesData: EmployeeCard[] = [];
+      querySnapshot.forEach((doc) => {
+        employeesData.push({ id: doc.id, ...doc.data() } as EmployeeCard);
+      });
+      setEmployees(employeesData);
+    } catch (error) {
+      console.error('Error loading employees:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
-
-  const currentPerson = employees.find(emp => emp.id === Number(id)) || employees[0];
-
-  // Slider functions
-  const nextSlide = () => {
-    setCurrentSlideIndex((prev) => (prev + 1) % employees.length);
   };
 
-  const prevSlide = () => {
-    setCurrentSlideIndex((prev) => (prev - 1 + employees.length) % employees.length);
+  // Load employees from Firestore
+  useEffect(() => {
+    loadEmployees();
+  }, []);
+
+  // Load current person when ID changes
+  useEffect(() => {
+    if (slug && employees.length > 0) {
+      const person = findPersonBySlug(employees, slug);
+      if (person) {
+        setCurrentPerson(person);
+      } else {
+        navigate('/404'); // Redirect to 404 if person not found
+      }
+    }
+  }, [slug, employees, navigate]);
+
+  // Check for person not found after loading is complete
+  useEffect(() => {
+    if (!loading && slug && employees.length > 0) {
+      const person = findPersonBySlug(employees, slug);
+      if (!person) {
+        navigate('/404'); // Redirect to 404 if person not found after loading
+      }
+    }
+  }, [loading, slug, employees, navigate]);
+
+  // Apply search filter when search term changes
+  useEffect(() => {
+    if (searchTerm.trim()) {
+      const query = searchTerm.toLowerCase().trim();
+      const results = employees.filter(employee =>
+        employee.name.toLowerCase().includes(query) ||
+        employee.position.toLowerCase().includes(query) ||
+        employee.department.toLowerCase().includes(query) ||
+        employee.skills?.some(skill => skill.toLowerCase().includes(query))
+      );
+      setSearchResults(results.slice(0, 6)); // Limit to 6 results for dropdown
+      setShowSearchResults(true);
+    } else {
+      setSearchResults([]);
+      setShowSearchResults(false);
+    }
+  }, [searchTerm, employees]);
+
+  // Show loading state while data is being fetched
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-secondary-800 flex items-center justify-center">
+        <div className="text-white text-center">
+          <div className="text-2xl font-bold mb-4">Loading...</div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-400 mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show 404 if no person found and not loading
+  if (!loading && slug && (!currentPerson || !findPersonBySlug(employees, slug))) {
+    return (
+      <div className="min-h-screen bg-secondary-800 flex items-center justify-center">
+        <div className="text-white text-center">
+          <div className="text-4xl font-bold mb-4">404</div>
+          <div className="text-xl mb-6">Person Not Found</div>
+          <Link 
+            to="/" 
+            className="bg-primary-400 text-black px-6 py-3 rounded-lg font-semibold hover:bg-primary-300 transition-colors"
+          >
+            Return to Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const formatAge = (dateOfBirth: string) => {
+    const birthDate = new Date(dateOfBirth);
+    const today = new Date();
+    const age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      return age - 1;
+    }
+    return age;
   };
 
-  // Get current set of 4 employees for display with infinite scroll effect
+  // Get current set of 6 employees for display without repetition
   const getCurrentEmployees = () => {
     const result = [];
-    for (let i = 0; i < 4; i++) {
-      const index = (currentSlideIndex + i) % employees.length;
-      result.push(employees[index]);
+    const startIndex = currentSlideIndex;
+    const endIndex = Math.min(startIndex + 3, employees.length);
+    
+    for (let i = startIndex; i < endIndex; i++) {
+      result.push(employees[i]);
     }
+    
+    // If we don't have 3 employees in this slide, don't repeat from beginning
     return result;
   };
 
+  // Update navigation functions to prevent going beyond bounds
+  const nextSlide = () => {
+    const nextIndex = currentSlideIndex + 3;
+    if (nextIndex < employees.length) {
+      setCurrentSlideIndex(nextIndex);
+    }
+  };
+
+  const prevSlide = () => {
+    const prevIndex = currentSlideIndex - 3;
+    if (prevIndex >= 0) {
+      setCurrentSlideIndex(prevIndex);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-secondary-800 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-400"></div>
+      </div>
+    );
+  }
+
+  if (!currentPerson) {
+    return (
+      <div className="min-h-screen bg-secondary-800 flex items-center justify-center">
+        <div className="text-white text-center">
+          <h1 className="text-2xl font-bold mb-4">Person Not Found</h1>
+          <p className="mb-4">The requested person could not be found.</p>
+          <Link to="/" className="bg-primary-400 text-black px-4 py-2 rounded font-semibold hover:bg-primary-300 transition-colors">
+            Return to Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-secondary-800">
-      {/* Header - Same as HomePage */}
-      <header className="bg-secondary-800 p-4 sm:p-8">
-        <div className="max-w-[1440px] mx-auto">
-          {/* First Row - Title and Logo */}
-          <div className="flex justify-between items-start mb-4 lg:mb-6">
-            {/* Left side - Title */}
-            <div className="flex-1">
-              <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-white">
-                COMPUTAN'S MOST WANTED
-              </h1>
-            </div>
-
-            {/* Right side - Tech and Logo */}
-            <div className="flex items-center space-x-3">
-              <div className="bg-white px-3 py-1 text-secondary-800 text-sm font-semibold">
-              MARKETERS
-              </div>
-              <img 
-                src="/computan-icon.webp" 
-                alt="Computan Logo" 
-                className="w-16 h-16 lg:w-24 lg:h-24 object-contain"
-              />
-            </div>
-          </div>
-
-          {/* Second Row - Search and Buttons */}
-          <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center space-y-4 lg:space-y-0">
-            {/* Left side - Search */}
-            <div className="relative w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-sm">
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-4 bg-secondary-700 text-white placeholder-gray-400 border border-secondary-600 focus:outline-none focus:border-primary-400"
-              />
-              <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 text-primary-400 w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-              </svg>
-            </div>
-
-            {/* Right side - Buttons */}
-            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-              <button className="bg-primary-400 text-black px-4 py-4 rounded text-sm font-semibold hover:bg-primary-300 transition-colors">
-                RECEIVE EMAIL ALERTS
-              </button>
-              <button className="bg-secondary-700 text-white px-4 py-4 rounded text-sm font-semibold hover:bg-secondary-600 transition-colors flex items-center justify-center">
-                ENGLISH
-                <span className="ml-1">▼</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Header */}
+      <Header
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        searchResults={searchResults}
+        showSearchResults={showSearchResults}
+        setShowSearchResults={setShowSearchResults}
+      />
 
       {/* Main Content */}
       <div className="max-w-[1440px] mx-auto p-4 sm:p-0">
@@ -196,10 +211,10 @@ export default function PersonDetailPage() {
           {/* Left Sidebar - Navigation and Person Cards */}
           <div className="lg:w-72 flex-shrink-0">
             {/* Navigation */}
-            <div className="bg-primary-400 rounded p-4 mb-4">
+            <div className="bg-primary-400 p-4 mb-4">
               <Link to="/" className="flex items-center space-x-2 text-white hover:text-primary-400 transition-colors">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7 7" />
                 </svg>
                 <span className="font-semibold text-sm">HOME</span>
               </Link>
@@ -207,36 +222,69 @@ export default function PersonDetailPage() {
 
             {/* Person Cards Slider */}
             <div className="relative">
-              {/* Top Arrow */}
-              <button 
-                onClick={prevSlide}
-                className="w-full bg-primary-400 text-white p-4 mb-2 flex items-center justify-center hover:bg-secondary-600 transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
-                </svg>
-              </button>
-              
-              {/* Cards Container */}
-              <div className="space-y-2 h-[90vh] overflow-y-auto scrollbar-hide">
-                {getCurrentEmployees().map((employee) => (
-                  <PersonCard 
-                    key={employee.id} 
-                    employee={employee} 
-                    isActive={employee.id === currentPerson.id}
-                  />
-                ))}
-              </div>
-              
-              {/* Bottom Arrow */}
-              <button 
-                onClick={nextSlide}
-                className="w-full bg-primary-400 text-white p-4 mt-2 flex items-center justify-center hover:bg-secondary-600 transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
+              {/* Only show navigation if there are more than 3 employees */}
+              {employees.length > 3 ? (
+                <>
+                  {/* Top Arrow */}
+                  <button 
+                    onClick={prevSlide}
+                    disabled={currentSlideIndex <= 0}
+                    className={`w-full p-3 mb-2 flex items-center justify-center transition-colors ${
+                      currentSlideIndex <= 0 
+                        ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                        : 'bg-primary-400 text-white hover:bg-secondary-600'
+                    }`}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+                    </svg>
+                  </button>
+                  
+                  {/* Cards Container */}
+                  <div className="space-y-2 h-[85vh] overflow-y-auto scrollbar-hide">
+                    {getCurrentEmployees().map((employee) => (
+                      <PersonCard 
+                        key={employee.id} 
+                        employee={employee} 
+                        isActive={employee.id === currentPerson?.id}
+                      />
+                    ))}
+                  </div>
+                  
+                  {/* Bottom Arrow */}
+                  <button 
+                    onClick={nextSlide}
+                    disabled={currentSlideIndex + 3 >= employees.length}
+                    className={`w-full p-3 mt-2 flex items-center justify-center transition-colors ${
+                      currentSlideIndex + 3 >= employees.length 
+                        ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                        : 'bg-primary-400 text-white hover:bg-secondary-600'
+                    }`}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </>
+              ) : (
+                <>
+                  {/* Show all employees without navigation when 3 or fewer */}
+                  <div className="bg-secondary-700 text-white text-center py-2 mb-2 rounded text-sm">
+                    {employees.length} Team Members
+                  </div>
+                  
+                  {/* Cards Container */}
+                  <div className="space-y-2 h-[85vh] overflow-y-auto scrollbar-hide">
+                    {employees.map((employee) => (
+                      <PersonCard 
+                        key={employee.id} 
+                        employee={employee} 
+                        isActive={employee.id === currentPerson?.id}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -249,7 +297,7 @@ export default function PersonDetailPage() {
                   <img 
                     src={currentPerson.image} 
                     alt={currentPerson.name}
-                    className="w-full aspect-square object-cover"
+                    className="w-full h-full object-cover"
                     onError={(e) => {
                       (e.currentTarget as HTMLElement).style.display = 'none';
                       ((e.currentTarget as HTMLElement).nextElementSibling as HTMLElement).style.display = 'flex';
@@ -260,116 +308,306 @@ export default function PersonDetailPage() {
                   </div>
                   
                   {/* Badges */}
-                  {currentPerson.hasReward && (
-                    <div className="absolute top-2 left-2 bg-danger-500 text-white px-2 py-1 text-xs font-bold">
-                      REWARD
-                    </div>
-                  )}
-                  {currentPerson.operation && (
-                    <div className="absolute bottom-2 left-2 bg-gray-800 text-white px-2 py-1 text-xs font-bold">
-                      {currentPerson.operation}
-                    </div>
-                  )}
+                  {/* Removed hardcoded badges */}
                 </div>
               </div>
 
               {/* Person Details */}
-              <div className="lg:col-span-3 bg-primary-400 p-6 ">
-                <h2 className="text-3xl font-bold text-black mb-4">{currentPerson.name}</h2>
-                <div className="flex items-center space-x-2 mb-4">
-                  <span className="text-black font-semibold">Wanted by Computan</span>
-                  <img src={currentPerson.flag} alt="Flag" className="w-6 h-4 object-cover" />
-                </div>
+              <div className="lg:col-span-3 bg-primary-400 p-6 flex flex-col justify-center">
+                <h2 className="text-2xl font-bold text-black mb-4 border-b border-black pb-2">{currentPerson.name}</h2>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-black">
-                  <div className="text-base"><strong>ALIAS:</strong> {currentPerson.role}</div>
-                  <div className="text-base"><strong>CRIME:</strong> Participation in a criminal organisation</div>
-                  <div className="text-base"><strong>SEX:</strong> Male</div>
-                  <div className="text-base"><strong>EYE COLOUR:</strong> Unknown</div>
-                  <div className="text-base"><strong>DATE OF BIRTH:</strong> May 16, 1990 (34 years)</div>
-                  <div className="text-base"><strong>NATIONALITY:</strong> Pakistani</div>
-                  <div className="text-base"><strong>ETHNIC ORIGIN:</strong> Asian</div>
-                  <div className="text-base"><strong>SPOKEN LANGUAGES:</strong> English, Urdu</div>
-                  <div className="text-base"><strong>STATE OF CASE:</strong> Ongoing investigation</div>
-                  <div className="text-base"><strong>PUBLISHED:</strong> on July 16, 2025, last modified on July 16, 2025</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <div className="bg-white/20 backdrop-blur-sm p-3 border-l-2 border-black">
+                      <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">POSITION</label>
+                      <p className="text-sm font-semibold text-black">{currentPerson.position}</p>
+                    </div>
+                    
+                    <div className="bg-white/20 backdrop-blur-sm p-3 border-l-2 border-black">
+                      <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">DEPARTMENT</label>
+                      <p className="text-sm font-semibold text-black">{currentPerson.department}</p>
+                    </div>
+                    
+                    <div className="bg-white/20 backdrop-blur-sm p-3 border-l-2 border-black">
+                      <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">GENDER</label>
+                      <p className="text-sm font-semibold text-black">{currentPerson.gender}</p>
+                    </div>
+                    
+                    <div className="bg-white/20 backdrop-blur-sm p-3 border-l-2 border-black">
+                      <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">DATE OF BIRTH</label>
+                      <p className="text-sm font-semibold text-black">{currentPerson.dateOfBirth} ({formatAge(currentPerson.dateOfBirth)} years)</p>
+                    </div>
+                    
+                    <div className="bg-white/20 backdrop-blur-sm p-3 border-l-2 border-black">
+                      <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">EMAIL</label>
+                      <p className="text-sm font-semibold text-black break-all">{currentPerson.email}</p>
+                    </div>
+                    
+                    <div className="bg-white/20 backdrop-blur-sm p-3 border-l-2 border-black">
+                      <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">PHONE</label>
+                      <p className="text-sm font-semibold text-black">{currentPerson.phone}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="bg-white/20 backdrop-blur-sm p-3 border-l-2 border-black">
+                      <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">COUNTRY</label>
+                      <p className="text-sm font-semibold text-black">{currentPerson.location}</p>
+                    </div>
+                    
+                    <div className="bg-white/20 backdrop-blur-sm p-3 border-l-2 border-black">
+                      <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">SKILLS</label>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {currentPerson.skills?.map((skill, index) => (
+                          <span key={index} className="px-2 py-1 bg-black text-white text-xs font-medium">
+                            {skill}
+                          </span>
+                        )) || <p className="text-sm font-semibold text-black">Not specified</p>}
+                      </div>
+                    </div>
+                    
+                    <div className="bg-white/20 backdrop-blur-sm p-3 border-l-2 border-black">
+                      <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">EXPERIENCE</label>
+                      <p className="text-sm font-semibold text-black">{currentPerson.experience}</p>
+                    </div>
+                    
+                    <div className="bg-white/20 backdrop-blur-sm p-3 border-l-2 border-black">
+                      <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">EDUCATION</label>
+                      <p className="text-sm font-semibold text-black">{currentPerson.education}</p>
+                    </div>
+                    
+                    <div className="bg-white/20 backdrop-blur-sm p-3 border-l-2 border-black">
+                      <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">JOIN DATE</label>
+                      <p className="text-sm font-semibold text-black">{currentPerson.joinDate}</p>
+                    </div>
+                    
+                    <div className="bg-white/20 backdrop-blur-sm p-3 border-l-2 border-black">
+                      <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">LAST MODIFIED</label>
+                      <p className="text-sm font-semibold text-black">{currentPerson.lastModified}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* CAN YOU HELP Section */}
+            {/* ATTENDANCE DETAILS Section */}
             <div className="bg-white">
               <div className="grid grid-cols-1 lg:grid-cols-5">
-                {/* Left Column - Form */}
+                {/* Left Column - Attendance Details */}
                 <div className="lg:col-span-2 p-6 bg-secondary-100">
-                  <h3 className="text-2xl font-medium text-gray-500 mb-8 tracking-wide">CAN YOU HELP?</h3>
+                  <h3 className="text-2xl font-medium text-gray-500 mb-8 tracking-wide">ATTENDANCE DETAILS</h3>
                   
-                  {/* Contact Form */}
-                  <form className="space-y-6">
-                    <div>
-                      <input
-                        type="text"
-                        placeholder="Name (Anonymous tips are allowed)"
-                        className="w-full px-4 py-3 border-b border-gray-400 bg-transparent text-gray-700 text-base font-normal focus:outline-none focus:border-gray-600"
-                      />
+                  {/* Current Status */}
+                  <div className="space-y-6">
+                    <div className="bg-white p-4 shadow-sm">
+                      <h4 className="text-lg font-semibold text-gray-800 mb-3">Current Status</h4>
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-3 h-3 ${currentPerson.isActive ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                        <span className="text-gray-700 font-medium">
+                          {currentPerson.isActive ? 'Online' : 'Offline'}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-500 mt-2">
+                        {currentPerson.isActive ? 'Currently working on shift' : 'Not currently working'}
+                      </p>
                     </div>
-                    <div>
-                      <input
-                        type="tel"
-                        placeholder="Telephone number"
-                        className="w-full px-4 py-3 border-b border-gray-400 bg-transparent text-gray-700 text-base font-normal focus:outline-none focus:border-gray-600"
-                      />
+
+                    {/* Today's Work Hours */}
+                    <div className="bg-white p-4 shadow-sm">
+                      <h4 className="text-lg font-semibold text-gray-800 mb-3">Today's Work Hours</h4>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Shift Target:</span>
+                          <span className="text-gray-800 font-medium">8 hours</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Total Worked:</span>
+                          <span className="text-blue-600 font-bold">6h 45m</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Remaining:</span>
+                          <span className="text-orange-600 font-medium">1h 15m</span>
+                        </div>
+                        <div className="flex justify-between border-t pt-2">
+                          <span className="text-gray-600 font-medium">Status:</span>
+                          <span className="text-green-600 font-medium">In Progress</span>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <input
-                        type="email"
-                        placeholder="E-mail"
-                        className="w-full px-4 py-3 border-b border-gray-400 bg-transparent text-gray-700 text-base font-normal focus:outline-none focus:border-gray-600"
-                      />
+
+                    {/* Today's Start/Stop Sessions */}
+                    <div className="bg-white p-4 shadow-sm">
+                      <h4 className="text-lg font-semibold text-gray-800 mb-3">Today's Sessions</h4>
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Session 1:</span>
+                          <span className="text-gray-800">09:00 AM - 12:30 PM (3h 30m)</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Session 2:</span>
+                          <span className="text-gray-800">01:15 PM - 03:00 PM (1h 45m)</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Session 3:</span>
+                          <span className="text-blue-600 font-medium">03:30 PM - Current (1h 30m)</span>
+                        </div>
+                        <div className="border-t pt-2 mt-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600 font-medium">Total Sessions:</span>
+                            <span className="text-gray-800 font-medium">3</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <button
-                      type="submit"
-                      className="w-full bg-gray-700 text-primary-400 px-6 py-4 font-bold text-base hover:bg-gray-600 transition-colors"
-                    >
-                      SEND MESSAGE
-                    </button>
-                  </form>
+
+                    {/* This Week's Attendance */}
+                    <div className="bg-white p-4 shadow-sm">
+                      <h4 className="text-lg font-semibold text-gray-800 mb-3">This Week's Attendance</h4>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Monday:</span>
+                          <span className="text-green-600 font-medium">Present (8h)</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Tuesday:</span>
+                          <span className="text-green-600 font-medium">Present (7.5h)</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Wednesday:</span>
+                          <span className="text-yellow-600 font-medium">Half Day (4h)</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Thursday:</span>
+                          <span className="text-green-600 font-medium">Present (8h)</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Friday:</span>
+                          <span className="text-blue-600 font-medium">Currently Working</span>
+                        </div>
+                        <div className="flex justify-between border-t pt-2">
+                          <span className="text-gray-600 font-medium">Total Hours:</span>
+                          <span className="text-gray-800 font-bold">27.5h</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Leave Statistics */}
+                    <div className="bg-white p-4 shadow-sm">
+                      <h4 className="text-lg font-semibold text-gray-800 mb-3">Statistics</h4>
+                      
+                      {/* Leaves Remaining */}
+                      <div className="text-center mb-4">
+                        <div className="text-3xl font-bold text-orange-500">8</div>
+                        <div className="text-sm text-gray-600">Leaves remaining this year</div>
+                      </div>
+
+                      {/* Allowance Breakdown */}
+                      <div className="space-y-2 mb-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-700 font-medium">Allowance breakdown</span>
+                          <span className="text-gray-400 text-sm">?</span>
+                        </div>
+                        <div className="space-y-1 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Leave Allowance:</span>
+                            <span className="text-gray-800">18</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Eid Holiday Allowance:</span>
+                            <span className="text-gray-800">3</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Carried over from 2024:</span>
+                            <span className="text-gray-800">0.5</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Individual adjustment:</span>
+                            <span className="text-gray-800">0.5</span>
+                          </div>
+                          <div className="flex justify-between border-t pt-1">
+                            <span className="text-gray-600">Used so far:</span>
+                            <span className="text-red-600">-11</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Used So Far */}
+                      <div className="space-y-1 text-sm">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-700 font-medium">Used so far</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Eid Holiday US:</span>
+                          <span className="text-gray-800">2 out of 3</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Leave:</span>
+                          <span className="text-gray-800">11 out of 19</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
                   <div className="mt-8 flex items-center space-x-2">
-                    <span className="text-gray-700 font-normal text-sm">Pakistan</span>
-                    <img src="/flag.png" alt="Flag" className="w-5 h-3 object-cover" />
+                    <img
+                      src={currentPerson.flag}
+                      alt="Flag"
+                      className="w-6 h-4 object-cover"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLElement).style.display = 'none';
+                      }}
+                    />
+                    <span className="text-gray-700 font-normal text-sm">{currentPerson.location || 'Location not specified'}</span>
                   </div>
                 </div>
 
                 {/* Right Column - Content */}
-                <div className="lg:col-span-3 p-6 pr-12">
-                  <div className="text-gray-700 text-base font-normal leading-relaxed space-y-4">
-                    <p>
-                      The Computan HR Department and Technical Recruitment Team request your assistance!
-                    </p>
-                    <p>
-                      <strong>{currentPerson.name}</strong> is wanted for exceptional technical skills and innovative problem-solving abilities.
-                    </p>
-                    <p>
-                      The individual is known for their expertise in <strong>{currentPerson.skills.join(', ')}</strong> and has been involved in 
-                      multiple high-profile projects. They are currently sought after for their exceptional talent and 
-                      innovative approach to software development.
-                    </p>
-                    <p>
-                      It may be assumed that the wanted person is currently available for new opportunities and may be 
-                      interested in joining our team of elite developers. The current whereabouts of the wanted person are unknown, 
-                      but there are indications that they could be available for new opportunities.
-                    </p>
+                <div className="lg:col-span-3 p-8 pr-12">
+                  <div className="bg-white p-8 shadow-lg">
+                    <h3 className="text-3xl font-bold text-gray-800 mb-6 border-b-2 border-gray-300 pb-3">ABOUT {currentPerson.name.toUpperCase()}</h3>
                     
-                    <div className="mt-6">
-                      <h4 className="font-normal text-gray-700 mb-4 text-base">Information of interest to the HR team:</h4>
-                      <ol className="list-decimal list-inside space-y-2 text-gray-700 text-base font-normal">
-                        <li>Have you seen {currentPerson.name} in any tech conferences or meetups?</li>
-                        <li>Can you provide information on the current whereabouts of the wanted person?</li>
-                        <li>Do you have any information indicating that the wanted person traveled outside their current location recently?</li>
-                        <li>Do you have any contact information for this person?</li>
-                        <li>Are you aware of their online presence or social media accounts?</li>
-                      </ol>
+                    <div className="mb-8">
+                      <p className="text-lg text-gray-700 leading-relaxed">
+                        {currentPerson.name} is a valued team member at Computan, bringing expertise and dedication to our organization.
+                      </p>
                     </div>
+                    
+                    {currentPerson.bio && (
+                      <div className="mb-8">
+                        <h4 className="text-xl font-semibold text-gray-800 mb-4">Biography</h4>
+                        <div 
+                          className="text-gray-700 leading-relaxed prose prose-lg max-w-none"
+                          dangerouslySetInnerHTML={{ __html: currentPerson.bio || 'No biography available for this team member.' }}
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Social Links */}
+                    {(currentPerson.linkedin || currentPerson.github || currentPerson.portfolio) && (
+                      <div className="border-t border-gray-200 pt-6">
+                        <h4 className="text-xl font-semibold text-gray-800 mb-4">Professional Links</h4>
+                        <div className="flex flex-wrap gap-4">
+                          {currentPerson.linkedin && (
+                            <a href={currentPerson.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors">
+                              <i className="fab fa-linkedin-in mr-2"></i>
+                              LinkedIn
+                            </a>
+                          )}
+                          {currentPerson.github && (
+                            <a href={currentPerson.github} target="_blank" rel="noopener noreferrer" className="flex items-center px-4 py-2 bg-gray-800 text-white hover:bg-gray-900 transition-colors">
+                              <i className="fab fa-github mr-2"></i>
+                              GitHub
+                            </a>
+                          )}
+                          {currentPerson.portfolio && (
+                            <a href={currentPerson.portfolio} target="_blank" rel="noopener noreferrer" className="flex items-center px-4 py-2 bg-purple-600 text-white hover:bg-purple-700 transition-colors">
+                              <i className="fas fa-link mr-2"></i>
+                              Portfolio
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -377,35 +615,6 @@ export default function PersonDetailPage() {
           </div>
         </div>
       </div>
-
-      {/* Cookie Notice */}
-      {showCookieNotice && (
-        <div className="fixed bottom-0 left-0 right-0 bg-primary-400 text-black p-4 z-50">
-          <div className="max-w-[1440px] mx-auto flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
-            <div className="text-xs sm:text-sm text-center sm:text-left">
-              This website optimises your browsing experience by adapting to your system settings and country location. 
-              For more information please see our{' '}
-              <a href="#" className="underline font-semibold">Notice</a> |{' '}
-              <a href="#" className="underline font-semibold">Disclaimer</a> |{' '}
-              <a href="#" className="underline font-semibold">Cookies Policy</a>
-            </div>
-            <div className="flex space-x-2">
-              <button 
-                onClick={() => setShowCookieNotice(false)}
-                className="bg-black text-white px-4 py-2 rounded text-sm font-semibold hover:bg-gray-800 transition-colors"
-              >
-                I agree
-              </button>
-              <button 
-                onClick={() => setShowCookieNotice(false)}
-                className="bg-black text-white px-4 py-2 rounded text-sm font-semibold hover:bg-gray-800 transition-colors"
-              >
-                I don't agree
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Footer */}
       <footer className="bg-secondary-800 text-gray-400 text-center py-4 text-sm">
@@ -419,7 +628,7 @@ export default function PersonDetailPage() {
 function PersonCard({ employee, isActive }: { employee: EmployeeCard; isActive: boolean }) {
   return (
     <Link 
-      to={`/person/${employee.id}`}
+      to={`/person/${createPersonSlug(employee.name)}`}
       className={`block bg-white overflow-hidden group transition-all duration-200 ${
         isActive ? 'border-4 border-primary-400 shadow-lg' : 'hover:shadow-md'
       }`}
@@ -427,12 +636,7 @@ function PersonCard({ employee, isActive }: { employee: EmployeeCard; isActive: 
       <div className="relative aspect-[4/5]">
         {/* Employee Image */}
         <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-          {employee.isArrested ? (
-            <div className="text-center">
-              <div className="text-3xl mb-1">👤</div>
-              <div className="text-black font-bold text-xs">HIRED</div>
-            </div>
-          ) : (
+          {employee.image ? (
             <img 
               src={employee.image} 
               alt={employee.name}
@@ -442,34 +646,31 @@ function PersonCard({ employee, isActive }: { employee: EmployeeCard; isActive: 
                 ((e.currentTarget as HTMLElement).nextElementSibling as HTMLElement).style.display = 'flex';
               }}
             />
-          )}
-          <div className="hidden w-full h-full bg-gray-200 items-center justify-center text-3xl">
+          ) : null}
+          <div className={`w-full h-full bg-gray-200 items-center justify-center text-3xl ${employee.image ? 'hidden' : 'flex'}`}>
             👨‍💻
           </div>
         </div>
 
-        {/* Badges */}
-        <div className="absolute top-1 left-1 right-1 flex justify-between">
-          {employee.hasReward && (
-            <div className="bg-danger-500 text-white px-1 py-0.5 text-xs font-bold">
-              REWARD
-            </div>
-          )}
-          {employee.operation && (
-            <div className="bg-gray-800 text-white px-1 py-0.5 text-xs font-bold">
-              {employee.operation}
-            </div>
-          )}
+        {/* Status Badge */}
+        <div className="absolute top-2 left-2">
+          <span className={`px-2 py-1 text-xs font-bold ${
+            employee.isActive 
+              ? 'bg-green-500 text-white' 
+              : 'bg-red-500 text-white'
+          }`}>
+            {employee.isActive ? 'ACTIVE' : 'INACTIVE'}
+          </span>
         </div>
 
         {/* Hover Overlay */}
         <div className="absolute inset-0 bg-primary-400 bg-opacity-95 flex flex-col items-center justify-start opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
           <div className="w-full p-4 text-center">
             <div className="text-black font-bold text-xs leading-tight mb-1">
-              Participation in a criminal organisation
+              {employee.position || 'Position not specified'}
             </div>
             <div className="text-black text-xs">
-              Ongoing investigation
+              {employee.department || 'Department not specified'}
             </div>
           </div>
           <div className="flex-1 flex items-center justify-center">

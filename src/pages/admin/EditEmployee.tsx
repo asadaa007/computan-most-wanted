@@ -1,30 +1,38 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import QuillEditor from '../../components/common/QuillEditor';
 
 interface Employee {
   id?: string;
   name: string;
-  alias: string;
-  sex: string;
+  position: string;
+  department: string;
+  gender: string;
   dateOfBirth: string;
   age: number;
-  ethnicOrigin: string;
-  stateOfCase: string;
-  crime: string;
-  eyeColour: string;
-  nationality: string;
-  spokenLanguages: string[];
+  email: string;
+  phone: string;
+  location: string;
+  skills: string[];
+  experience: string;
+  education: string;
   bio: string;
   image: string;
-  flag: string;
-  hasReward: boolean;
-  rewardAmount: string;
-  operation: string;
-  published: string;
+  linkedin: string;
+  github: string;
+  portfolio: string;
+  isActive: boolean;
+  joinDate: string;
   lastModified: string;
+  flag: string;
+}
+
+interface Department {
+  id: string;
+  name: string;
+  order: number;
 }
 
 export default function EditEmployee() {
@@ -32,47 +40,66 @@ export default function EditEmployee() {
   const { id } = useParams();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [languagesInput, setLanguagesInput] = useState('');
+  const [skillsInput, setSkillsInput] = useState('');
   const [employee, setEmployee] = useState<Employee | null>(null);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [formData, setFormData] = useState<Employee>({
     name: '',
-    alias: '',
-    sex: '',
+    position: '',
+    department: '',
+    gender: '',
     dateOfBirth: '',
     age: 0,
-    ethnicOrigin: '',
-    stateOfCase: '',
-    crime: '',
-    eyeColour: '',
-    nationality: '',
-    spokenLanguages: [],
+    email: '',
+    phone: '',
+    location: '',
+    skills: [],
+    experience: '',
+    education: '',
     bio: '',
     image: '',
-    flag: '/flag.png',
-    hasReward: false,
-    rewardAmount: '',
-    operation: '',
-    published: new Date().toISOString().split('T')[0],
-    lastModified: new Date().toISOString().split('T')[0]
+    linkedin: '',
+    github: '',
+    portfolio: '',
+    isActive: true,
+    joinDate: '',
+    lastModified: '',
+    flag: ''
   });
 
-  // Load employee data
+  // Load employee data and departments
   useEffect(() => {
     if (id) {
       loadEmployee();
     }
+    loadDepartments();
   }, [id]);
 
-  const handleLanguagesChange = (languagesString: string) => {
-    setLanguagesInput(languagesString);
+  const loadDepartments = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, 'departments'));
+      const departmentsData: Department[] = [];
+      querySnapshot.forEach((doc) => {
+        departmentsData.push({ id: doc.id, ...doc.data() } as Department);
+      });
+      // Sort by order
+      departmentsData.sort((a, b) => a.order - b.order);
+      setDepartments(departmentsData);
+    } catch (error) {
+      console.error('Error loading departments:', error);
+    }
+  };
+
+  const handleSkillsChange = (skillsString: string) => {
+    setSkillsInput(skillsString);
     
-    // Split by comma and clean up each language
-    const languagesArray = languagesString
+    // Split by comma and clean up each skill
+    const skillsArray = skillsString
       .split(',')
-      .map(lang => lang.trim())
-      .filter(lang => lang.length > 0);
+      .map(skill => skill.trim())
+      .filter(skill => skill.length > 0);
     
-    setFormData({ ...formData, spokenLanguages: languagesArray });
+    setFormData({ ...formData, skills: skillsArray });
   };
 
   const calculateAge = (dateOfBirth: string) => {
@@ -96,8 +123,8 @@ export default function EditEmployee() {
         const employeeData = { id: docSnap.id, ...docSnap.data() } as Employee;
         setEmployee(employeeData);
         setFormData(employeeData);
-        // Set the languages input to show the comma-separated string
-        setLanguagesInput(employeeData.spokenLanguages.join(', '));
+        // Set the skills input to show the comma-separated string
+        setSkillsInput(employeeData.skills?.join(', ') || '');
       } else {
         alert('Employee not found!');
         navigate('/comp-admin/employees');
@@ -119,20 +146,20 @@ export default function EditEmployee() {
       alert('Please enter the employee name.');
       return;
     }
-    if (!formData.alias.trim()) {
-      alert('Please enter the employee alias.');
+    if (!formData.position.trim()) {
+      alert('Please enter the employee position.');
       return;
     }
-    if (!formData.sex) {
-      alert('Please select the employee sex.');
+    if (!formData.gender) {
+      alert('Please select the employee gender.');
       return;
     }
     if (!formData.dateOfBirth) {
       alert('Please enter the date of birth.');
       return;
     }
-    if (!formData.crime.trim()) {
-      alert('Please enter the crime description.');
+    if (!formData.email.trim()) {
+      alert('Please enter the employee email.');
       return;
     }
     
@@ -146,9 +173,9 @@ export default function EditEmployee() {
         ...formData,
         lastModified: new Date().toISOString().split('T')[0],
         // Ensure arrays are properly formatted
-        spokenLanguages: formData.spokenLanguages.filter(lang => lang.trim().length > 0),
+        skills: formData.skills.filter(skill => skill.trim().length > 0),
         // Ensure boolean fields are properly set
-        hasReward: Boolean(formData.hasReward),
+        isActive: Boolean(formData.isActive),
         // Ensure age is calculated properly
         age: formData.age || 0
       };
@@ -174,7 +201,7 @@ export default function EditEmployee() {
     return (
       <div className="p-6">
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-secondary-800"></div>
+          <div className="animate-spin h-12 w-12 border-b-2 border-secondary-800"></div>
         </div>
       </div>
     );
@@ -187,9 +214,9 @@ export default function EditEmployee() {
           <h2 className="text-xl font-semibold text-secondary-800">Employee not found</h2>
           <button
             onClick={() => navigate('/comp-admin/employees')}
-            className="mt-4 px-4 py-2 bg-secondary-800 text-white rounded-lg hover:bg-secondary-900 transition-colors duration-200"
+            className="mt-4 px-4 py-2 bg-secondary-800 text-white  hover:bg-secondary-900 transition-colors duration-200"
           >
-            Back to Employees
+            Back to Employee List
           </button>
         </div>
       </div>
@@ -201,20 +228,20 @@ export default function EditEmployee() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-secondary-800">Edit Employee</h1>
-          <p className="text-secondary-600 mt-1">Update employee information.</p>
+          <h1 className="text-3xl font-bold text-secondary-800">Edit Team Member</h1>
+          <p className="text-secondary-600 mt-1">Update team member information.</p>
         </div>
         <button
           onClick={() => navigate('/comp-admin/employees')}
-          className="px-4 py-2 border border-secondary-300 text-secondary-700 rounded-lg hover:bg-secondary-100 transition-colors duration-200"
+          className="px-4 py-2 border border-secondary-300 text-secondary-700 hover:bg-secondary-100 transition-colors duration-200"
         >
           <i className="fas fa-arrow-left mr-2"></i>
-          Back to Employees
+          Back to Team List
         </button>
       </div>
 
       {/* Form */}
-      <div className="bg-white rounded-2xl p-8 shadow-lg border border-secondary-200 max-w-4xl">
+      <div className="bg-white p-8 shadow-lg border border-secondary-200 max-w-4xl">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Personal Information */}
           <div>
@@ -228,7 +255,7 @@ export default function EditEmployee() {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-3 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-secondary-300 focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
                   placeholder="e.g., JOHNSON, Emily"
                   required
                 />
@@ -236,29 +263,48 @@ export default function EditEmployee() {
               
               <div>
                 <label className="block text-sm font-medium text-secondary-700 mb-2">
-                  Alias <span className="text-danger-500">*</span>
+                  Position <span className="text-danger-500">*</span>
                 </label>
                 <input
                   type="text"
-                  value={formData.alias}
-                  onChange={(e) => setFormData({ ...formData, alias: e.target.value })}
-                  className="w-full px-4 py-3 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
-                  placeholder="e.g., UI/UX Designer"
+                  value={formData.position}
+                  onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                  className="w-full px-4 py-3 border border-secondary-300  focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
+                  placeholder="e.g., Software Engineer"
                   required
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-secondary-700 mb-2">
-                  Sex <span className="text-danger-500">*</span>
+                  Department <span className="text-danger-500">*</span>
                 </label>
                 <select
-                  value={formData.sex}
-                  onChange={(e) => setFormData({ ...formData, sex: e.target.value })}
-                  className="w-full px-4 py-3 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
+                  value={formData.department}
+                  onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                  className="w-full px-4 py-3 border border-secondary-300  focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
                   required
                 >
-                  <option value="">Select Sex</option>
+                  <option value="">Select Department</option>
+                  {departments.map((dept) => (
+                    <option key={dept.id} value={dept.name}>
+                      {dept.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-secondary-700 mb-2">
+                  Gender <span className="text-danger-500">*</span>
+                </label>
+                <select
+                  value={formData.gender}
+                  onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                  className="w-full px-4 py-3 border border-secondary-300  focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
+                  required
+                >
+                  <option value="">Select Gender</option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                   <option value="Other">Other</option>
@@ -276,7 +322,7 @@ export default function EditEmployee() {
                     const age = calculateAge(e.target.value);
                     setFormData({ ...formData, dateOfBirth: e.target.value, age });
                   }}
-                  className="w-full px-4 py-3 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-secondary-300  focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
                   required
                 />
               </div>
@@ -289,114 +335,116 @@ export default function EditEmployee() {
                   type="number"
                   value={formData.age}
                   readOnly
-                  className="w-full px-4 py-3 border border-secondary-300 rounded-lg bg-secondary-50 text-secondary-600"
+                  className="w-full px-4 py-3 border border-secondary-300  bg-secondary-50 text-secondary-600"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-secondary-700 mb-2">
-                  Ethnic Origin
+                  Email <span className="text-danger-500">*</span>
                 </label>
                 <input
-                  type="text"
-                  value={formData.ethnicOrigin}
-                  onChange={(e) => setFormData({ ...formData, ethnicOrigin: e.target.value })}
-                  className="w-full px-4 py-3 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
-                  placeholder="e.g., Asian"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-secondary-700 mb-2">
-                  Nationality
-                </label>
-                <input
-                  type="text"
-                  value={formData.nationality}
-                  onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
-                  className="w-full px-4 py-3 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
-                  placeholder="e.g., Pakistani"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-secondary-700 mb-2">
-                  Eye Colour
-                </label>
-                <input
-                  type="text"
-                  value={formData.eyeColour}
-                  onChange={(e) => setFormData({ ...formData, eyeColour: e.target.value })}
-                  className="w-full px-4 py-3 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
-                  placeholder="e.g., Brown"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Case Information */}
-          <div>
-            <h2 className="text-xl font-semibold text-secondary-800 mb-4">Case Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-secondary-700 mb-2">
-                  Crime <span className="text-danger-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.crime}
-                  onChange={(e) => setFormData({ ...formData, crime: e.target.value })}
-                  className="w-full px-4 py-3 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
-                  placeholder="e.g., Participation in a criminal organisation"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-4 py-3 border border-secondary-300  focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
+                  placeholder="e.g., john.doe@example.com"
                   required
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-secondary-700 mb-2">
-                  State of Case
+                  Phone
+                </label>
+                <input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="w-full px-4 py-3 border border-secondary-300  focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
+                  placeholder="e.g., +1 234 567 890"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-secondary-700 mb-2">
+                  Location
                 </label>
                 <input
                   type="text"
-                  value={formData.stateOfCase}
-                  onChange={(e) => setFormData({ ...formData, stateOfCase: e.target.value })}
-                  className="w-full px-4 py-3 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
-                  placeholder="e.g., Ongoing investigation"
+                  value={formData.location}
+                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  className="w-full px-4 py-3 border border-secondary-300  focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
+                  placeholder="e.g., New York, USA"
                 />
               </div>
             </div>
           </div>
 
-          {/* Languages */}
+          {/* Skills */}
           <div>
-            <h2 className="text-xl font-semibold text-secondary-800 mb-4">Languages</h2>
+            <h2 className="text-xl font-semibold text-secondary-800 mb-4">Skills</h2>
             <div>
               <label className="block text-sm font-medium text-secondary-700 mb-2">
-                Spoken Languages (comma-separated)
+                Skills (comma-separated)
               </label>
               <input
                 type="text"
-                value={languagesInput}
-                onChange={(e) => handleLanguagesChange(e.target.value)}
-                className="w-full px-4 py-3 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
-                placeholder="e.g., English, Urdu, French"
+                value={skillsInput}
+                onChange={(e) => handleSkillsChange(e.target.value)}
+                className="w-full px-4 py-3 border border-secondary-300  focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
+                placeholder="e.g., React, Node.js, MongoDB"
               />
               <p className="text-sm text-secondary-500 mt-1">
                 <i className="fas fa-info-circle mr-1"></i>
-                Separate multiple languages with commas (e.g., "English, Urdu, French")
+                Separate multiple skills with commas (e.g., "React, Node.js, MongoDB")
               </p>
-              {formData.spokenLanguages.length > 0 && (
+              {formData.skills.length > 0 && (
                 <div className="mt-2">
-                  <p className="text-xs text-secondary-600 mb-1">Languages detected:</p>
+                  <p className="text-xs text-secondary-600 mb-1">Skills detected:</p>
                   <div className="flex flex-wrap gap-1">
-                    {formData.spokenLanguages.map((lang, index) => (
-                      <span key={index} className="px-2 py-1 bg-secondary-100 text-secondary-700 text-xs rounded">
-                        {lang}
+                    {formData.skills.map((skill, index) => (
+                      <span key={index} className="px-2 py-1 bg-secondary-100 text-secondary-700 text-xs">
+                        {skill}
                       </span>
                     ))}
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Experience & Education */}
+          <div>
+            <h2 className="text-xl font-semibold text-secondary-800 mb-4">Experience & Education</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-secondary-700 mb-2">
+                  Work Experience
+                </label>
+                <textarea
+                  value={formData.experience}
+                  onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
+                  className="w-full px-4 py-3 border border-secondary-300  focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
+                  placeholder="e.g., 5+ years in software development, worked at Google, Microsoft..."
+                  rows={4}
+                />
+                <p className="text-sm text-secondary-500 mt-1">Brief description of work experience</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-secondary-700 mb-2">
+                  Education
+                </label>
+                <textarea
+                  value={formData.education}
+                  onChange={(e) => setFormData({ ...formData, education: e.target.value })}
+                  className="w-full px-4 py-3 border border-secondary-300  focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
+                  placeholder="e.g., BS Computer Science, Stanford University..."
+                  rows={4}
+                />
+                <p className="text-sm text-secondary-500 mt-1">Educational background and qualifications</p>
+              </div>
             </div>
           </div>
 
@@ -407,7 +455,7 @@ export default function EditEmployee() {
               <label className="block text-sm font-medium text-secondary-700 mb-2">
                 Employee Biography
               </label>
-              <div className="border border-secondary-300 rounded-lg overflow-hidden">
+              <div className="border border-secondary-300  overflow-hidden">
                 <QuillEditor
                   value={formData.bio}
                   onChange={(content: string) => setFormData({ ...formData, bio: content })}
@@ -430,7 +478,7 @@ export default function EditEmployee() {
                   type="text"
                   value={formData.image}
                   onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  className="w-full px-4 py-3 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-secondary-300  focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
                   placeholder="e.g., /path/to/image.jpg"
                 />
                 <p className="text-sm text-secondary-500 mt-1">Path to the employee's profile image</p>
@@ -438,70 +486,95 @@ export default function EditEmployee() {
               
               <div>
                 <label className="block text-sm font-medium text-secondary-700 mb-2">
-                  Flag Image URL
+                  LinkedIn Profile URL
                 </label>
                 <input
-                  type="text"
+                  type="url"
+                  value={formData.linkedin}
+                  onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
+                  className="w-full px-4 py-3 border border-secondary-300  focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
+                  placeholder="e.g., https://www.linkedin.com/in/username"
+                />
+                <p className="text-sm text-secondary-500 mt-1">Employee's LinkedIn profile URL</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-secondary-700 mb-2">
+                  GitHub Profile URL
+                </label>
+                <input
+                  type="url"
+                  value={formData.github}
+                  onChange={(e) => setFormData({ ...formData, github: e.target.value })}
+                  className="w-full px-4 py-3 border border-secondary-300  focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
+                  placeholder="e.g., https://github.com/username"
+                />
+                <p className="text-sm text-secondary-500 mt-1">Employee's GitHub profile URL</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-secondary-700 mb-2">
+                  Portfolio URL
+                </label>
+                <input
+                  type="url"
+                  value={formData.portfolio}
+                  onChange={(e) => setFormData({ ...formData, portfolio: e.target.value })}
+                  className="w-full px-4 py-3 border border-secondary-300  focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
+                  placeholder="e.g., https://username.com"
+                />
+                <p className="text-sm text-secondary-500 mt-1">Employee's portfolio website URL</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-secondary-700 mb-2">
+                  Flag URL
+                </label>
+                <input
+                  type="url"
                   value={formData.flag}
                   onChange={(e) => setFormData({ ...formData, flag: e.target.value })}
-                  className="w-full px-4 py-3 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
-                  placeholder="e.g., /flag.png"
+                  className="w-full px-4 py-3 border border-secondary-300  focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
+                  placeholder="e.g., https://example.com/flag.png"
                 />
-                <p className="text-sm text-secondary-500 mt-1">Path to the flag image</p>
+                <p className="text-sm text-secondary-500 mt-1">URL to the employee's country flag image</p>
               </div>
             </div>
           </div>
 
-          {/* Operation */}
+          {/* Status */}
           <div>
-            <h2 className="text-xl font-semibold text-secondary-800 mb-4">Operation Details</h2>
+            <h2 className="text-xl font-semibold text-secondary-800 mb-4">Status</h2>
             <div>
               <label className="block text-sm font-medium text-secondary-700 mb-2">
-                Operation Name
+                Is Active
               </label>
-              <input
-                type="text"
-                value={formData.operation}
-                onChange={(e) => setFormData({ ...formData, operation: e.target.value })}
-                className="w-full px-4 py-3 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
-                placeholder="e.g., OPERATION CLOUD"
-              />
-              <p className="text-sm text-secondary-500 mt-1">Special operation or project name</p>
+              <select
+                value={formData.isActive ? 'true' : 'false'}
+                onChange={(e) => setFormData({ ...formData, isActive: e.target.value === 'true' })}
+                className="w-full px-4 py-3 border border-secondary-300  focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
+              >
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+              </select>
+              <p className="text-sm text-secondary-500 mt-1">Employee's current employment status</p>
             </div>
           </div>
 
-          {/* Reward Information */}
+          {/* Join Date */}
           <div>
-            <h2 className="text-xl font-semibold text-secondary-800 mb-4">Reward Information</h2>
-            <div className="space-y-4">
-              <label className="flex items-center p-4 border border-secondary-200 rounded-lg hover:bg-secondary-50 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.hasReward}
-                  onChange={(e) => setFormData({ ...formData, hasReward: e.target.checked })}
-                  className="mr-3 h-4 w-4 text-secondary-600 focus:ring-secondary-500 border-secondary-300 rounded"
-                />
-                <div className="flex-1">
-                  <div className="text-sm font-medium text-secondary-800">Has Reward</div>
-                  <div className="text-xs text-secondary-600">Display reward badge</div>
-                </div>
+            <h2 className="text-xl font-semibold text-secondary-800 mb-4">Employment Details</h2>
+            <div>
+              <label className="block text-sm font-medium text-secondary-700 mb-2">
+                Join Date
               </label>
-              
-              {formData.hasReward && (
-                <div>
-                  <label className="block text-sm font-medium text-secondary-700 mb-2">
-                    Reward Description
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.rewardAmount}
-                    onChange={(e) => setFormData({ ...formData, rewardAmount: e.target.value })}
-                    className="w-full px-4 py-3 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
-                    placeholder="Information leading to ask questions"
-                  />
-                  <p className="text-sm text-secondary-500 mt-1">Enter the reward description</p>
-                </div>
-              )}
+              <input
+                type="date"
+                value={formData.joinDate}
+                onChange={(e) => setFormData({ ...formData, joinDate: e.target.value })}
+                className="w-full px-4 py-3 border border-secondary-300  focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:border-transparent"
+              />
+              <p className="text-sm text-secondary-500 mt-1">Date when the employee joined the company</p>
             </div>
           </div>
 
@@ -510,17 +583,17 @@ export default function EditEmployee() {
             <button
               type="submit"
               disabled={saving}
-              className="px-6 py-3 bg-secondary-800 text-white rounded-lg hover:bg-secondary-900 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-secondary-800 text-white px-4 py-3  hover:bg-secondary-900 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? (
                 <>
                   <i className="fas fa-spinner fa-spin mr-2"></i>
-                  Updating Employee...
+                  Updating...
                 </>
               ) : (
                 <>
                   <i className="fas fa-save mr-2"></i>
-                  Update Employee
+                  Update Team Member
                 </>
               )}
             </button>
@@ -535,7 +608,7 @@ export default function EditEmployee() {
             <button
               type="button"
               onClick={() => navigate('/comp-admin/employees')}
-              className="px-6 py-3 border border-secondary-300 text-secondary-700 rounded-lg hover:bg-secondary-100 transition-colors duration-200"
+              className="px-6 py-3 border border-secondary-300 text-secondary-700  hover:bg-secondary-100 transition-colors duration-200"
             >
               Cancel
             </button>
