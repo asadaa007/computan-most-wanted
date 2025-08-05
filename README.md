@@ -1,62 +1,40 @@
-# Computan Most Wanted
+# Computan Employee Management System
 
-A modern React TypeScript application for managing and displaying tech talent profiles in a "Most Wanted" style interface. Built with Firebase backend and Tailwind CSS for a professional, responsive design.
+A modern React TypeScript application for managing and showcasing company employees through both public-facing and administrative interfaces.
 
-## 🎯 Project Overview
+## 📖 Table of Contents
 
-Computan Most Wanted is a talent recruitment platform that presents employee profiles in an engaging "Most Wanted" poster style. The application features both public-facing talent showcase and an admin dashboard for content management.
+- [For Developers](#-for-developers)
+- [For Users](#-for-users)
+- [Quick Start](#-quick-start)
+- [Features](#-features)
 
-### 🌟 Key Features
+## 👨‍💻 For Developers
 
-#### Public Website
-- **"Most Wanted" Style Interface**: Employee profiles displayed as wanted posters
-- **Responsive Design**: Optimized for desktop, tablet, and mobile devices
-- **Search Functionality**: Find specific talent profiles
-- **Employee Detail Pages**: Individual profile pages with rich information
-- **Recently Added Section**: Highlight new talent additions
-- **Contact Forms**: Direct communication with potential candidates
-
-#### Admin Dashboard
-- **Secure Authentication**: Firebase-based admin login system
-- **Employee Management**: Add, edit, and delete employee profiles
-- **Rich Text Editor**: Bio content management with React Quill
-- **Form Submissions**: View and manage contact form submissions
-- **Responsive Admin Interface**: Professional dashboard design
-
-## 🛠 Tech Stack
-
-- **Frontend**: React 18.3.1 with TypeScript
+### Tech Stack
+- **Frontend**: React 18.3.1 with TypeScript 5.8.3
 - **Styling**: Tailwind CSS 3.4.17
-- **Backend**: Firebase (Authentication, Firestore, Storage)
-- **Build Tool**: Vite
-- **Rich Text Editor**: React Quill
-- **Icons**: FontAwesome
-- **Routing**: React Router DOM
-
-## 🚀 Getting Started
+- **Backend**: Firebase 12.0.0 (Auth, Firestore, Storage)
+- **Build Tool**: Vite 7.0.4
+- **Routing**: React Router DOM 7.7.1
 
 ### Prerequisites
-
 - Node.js (v16 or higher)
 - npm or yarn
-- Firebase project setup
+- Firebase project
 
-### Installation
+### Installation & Setup
 
-1. **Clone the repository**
+1. **Clone and install**
    ```bash
    git clone https://github.com/asadaa007/computan-most-wanted.git
    cd computan-most-wanted
-   ```
-
-2. **Install dependencies**
-   ```bash
    npm install
    ```
 
-3. **Environment Setup**
+2. **Environment Configuration**
    - Copy `.env.example` to `.env`
-   - Add your Firebase configuration:
+   - Add Firebase configuration:
    ```env
    VITE_FIREBASE_API_KEY=your_api_key
    VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
@@ -66,126 +44,296 @@ Computan Most Wanted is a talent recruitment platform that presents employee pro
    VITE_FIREBASE_APP_ID=your_app_id
    ```
 
-4. **Firebase Setup**
-   - Create a Firebase project
-   - Enable Authentication, Firestore, and Storage
-   - Set up Firestore security rules
-   - Initialize Firebase in your project
+3. **Firebase Setup**
+   - Create Firebase project
+   - Enable Authentication, Firestore, Storage
+   - Deploy security rules: `firebase deploy --only firestore:rules`
 
-5. **Run the development server**
+4. **Development**
    ```bash
-   npm run dev
+   npm run dev          # Start development server
+   npm run build        # Build for production
+   npm run preview      # Preview production build
+   npm run lint         # Run ESLint
    ```
 
-6. **Build for production**
-   ```bash
-   npm run build
-   ```
-
-## 📁 Project Structure
-
+### Project Structure
 ```
 src/
-├── components/
-│   ├── admin/           # Admin-specific components
-│   │   ├── AdminHeader.tsx
-│   │   ├── AdminSidebar.tsx
-│   │   └── ProtectedRoute.tsx
-│   ├── common/          # Shared components
-│   │   └── QuillEditor.tsx
-│   └── public/          # Public-facing components
-│       ├── PublicFooter.tsx
-│       └── PublicNavbar.tsx
-├── layouts/
-│   ├── admin/           # Admin layout
-│   │   └── AdminLayout.tsx
-│   └── public/          # Public layout
-│       └── PublicLayout.tsx
-├── pages/
-│   ├── admin/           # Admin pages
-│   │   ├── AddEmployee.tsx
-│   │   ├── AdminDashboard.tsx
-│   │   ├── AdminLogin.tsx
-│   │   ├── EditEmployee.tsx
-│   │   ├── FormSubmissions.tsx
-│   │   └── ManageEmployees.tsx
-│   └── public/          # Public pages
-│       ├── HomePage.tsx
-│       └── PersonDetailPage.tsx
-├── router/
-│   └── index.tsx        # Route configuration
-├── firebase.ts          # Firebase configuration
-├── main.tsx            # Application entry point
-└── index.css           # Global styles
+├── components/         # Reusable UI components
+├── layouts/           # Page layouts
+├── pages/             # Application pages
+├── router/            # Route configuration
+├── utils/             # Utility functions
+└── firebase.ts        # Firebase configuration
 ```
 
-## 🎨 Design System
+### Database Collections
+- `employees` - Employee profiles
+- `departments` - Department management
+- `adminUsers` - Admin user accounts
+- `formSubmissions` - Public inquiries
+- `settings` - System configuration
+- `attendance` - Attendance records
 
-### Color Palette
-- **Primary**: `#f0b95e` (Golden yellow)
-- **Secondary**: `#484848` (Dark gray)
-- **White**: `#ffffff`
-- **Black**: `#000000`
-
-### Key Features
-- **Glass Morphism**: Modern UI effects
-- **Responsive Grid**: Adaptive layouts for all screen sizes
-- **Custom Animations**: Smooth transitions and hover effects
-- **Professional Typography**: Clean, readable fonts
-
-## 🔐 Authentication & Security
-
-- **Admin Routes**: Protected with Firebase Authentication
-- **Firestore Rules**: Secure data access patterns
-- **Environment Variables**: Secure API key management
-
-## 📱 Responsive Design
-
-The application is fully responsive with breakpoints:
-- **Mobile**: 320px - 640px
-- **Tablet**: 640px - 1024px
-- **Desktop**: 1024px+
-
-## 🚀 Deployment
-
-### Firebase Hosting
+### Deployment
 ```bash
+# Firebase Hosting
 npm run build
 firebase deploy
+
+# Netlify (configured)
+# Deploy to Netlify with netlify.toml
 ```
 
-### Other Platforms
-The application can be deployed to any static hosting platform:
-- Vercel
-- Netlify
-- GitHub Pages
-- AWS S3
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 👨‍💻 Author
-
-**Asad Ur Rehman**
-- GitHub: [@asadaa007](https://github.com/asadaa007)
-- Email: arehman@computan.net
-
-## 🙏 Acknowledgments
-
-- Firebase for backend services
-- Tailwind CSS for styling framework
-- React team for the amazing framework
-- Vite for fast build tooling
+### Security
+- Public read access to employee data
+- Admin authentication required for modifications
+- Role-based access: Master > Manager > Team Lead
 
 ---
 
-**Computan Most Wanted** - Where talent meets opportunity! 🎯
+## 👥 For Users
+
+### What is this system?
+
+The **Computan Employee Management System** is a professional platform that allows your company to:
+
+- **Showcase your team** on a public website
+- **Manage employee information** through an admin panel
+- **Track attendance** and work hours
+- **Organize departments** and team structure
+- **Handle public inquiries** about your team
+
+### How to Access the System
+
+#### Public Website (Everyone)
+- **URL**: Your company's public website
+- **Purpose**: View employee profiles and company information
+- **No login required**: Anyone can browse and search employees
+
+#### Admin Panel (Authorized Users Only)
+- **URL**: `/comp-admin`
+- **Purpose**: Manage all system data and settings
+- **Login required**: Email and password authentication
+
+### User Roles & Permissions
+
+#### 🎯 Master User
+- **Full system access**
+- **Can manage all users and settings**
+- **Can create/edit/delete any data**
+- **Access to all admin features**
+
+#### 👨‍💼 Manager
+- **Employee and department management**
+- **Can view and edit employee profiles**
+- **Can manage departments**
+- **Limited user management access**
+
+#### 👨‍💻 Team Lead
+- **Basic employee management**
+- **Can view employee data**
+- **Limited editing permissions**
+- **No user management access**
+
+### Getting Started as an Admin
+
+#### 1. First Login
+- Contact your system administrator for login credentials
+- Visit `/comp-admin` in your browser
+- Enter your email and password
+- You'll be redirected to the admin dashboard
+
+#### 2. Dashboard Overview
+The admin dashboard shows:
+- **Total team members** count
+- **Active employees** statistics
+- **Recent additions** to the team
+- **Quick action buttons** for common tasks
+
+#### 3. Managing Employees
+
+##### Adding a New Employee
+1. Go to **Team** → **Add Team Member**
+2. Fill in all required information:
+   - Personal details (name, email, phone)
+   - Professional info (position, department, skills)
+   - Profile image upload
+   - Social media links (optional)
+3. Click **Save** to add the employee
+
+##### Editing Employee Information
+1. Go to **Team** → **Team Record Management**
+2. Find the employee in the list
+3. Click **Edit** button
+4. Update the information
+5. Click **Save** to update
+
+##### Viewing Employee Details
+1. Go to **Team** → **Team Record Management**
+2. Click **View** button next to any employee
+3. See complete profile information
+
+#### 4. Department Management
+
+##### Creating Departments
+1. Go to **Departments**
+2. Click **Add Department**
+3. Enter department name
+4. Set display order (optional)
+5. Click **Save**
+
+##### Managing Department Order
+- Use the order field to control how departments appear
+- Lower numbers appear first
+- Drag and drop functionality available
+
+#### 5. Attendance Management
+
+##### Viewing Attendance
+1. Go to **Attendance**
+2. View attendance statistics and records
+3. Monitor employee work hours and status
+
+##### Attendance Settings
+- Configure attendance tracking settings
+- Set up Rocket.Chat integration (if applicable)
+- Manage work hour policies
+
+#### 6. User Management (Master Users Only)
+
+##### Adding Admin Users
+1. Go to **Settings** → **Admin Users**
+2. Click **Add User**
+3. Enter user details and assign role
+4. User will receive email invitation
+
+##### Managing User Roles
+- **Master**: Full system access
+- **Manager**: Employee and department management
+- **Team Lead**: Limited employee access
+
+##### Password Reset
+- Click **Reset Password** button for any user
+- User will receive password reset email
+
+#### 7. System Settings
+
+##### Email Configuration
+- Configure SMTP settings for notifications
+- Set up email templates
+- Test email functionality
+
+##### Security Settings
+- Manage authentication policies
+- Configure session timeouts
+- Set up access controls
+
+##### System Configuration
+- General application settings
+- Feature toggles
+- System preferences
+
+### Public Website Features
+
+#### Browsing Employees
+- **Search**: Use the search bar to find specific employees
+- **Filter**: Filter by department, location, or skills
+- **Browse**: Scroll through all team members
+
+#### Employee Profiles
+- **Professional Information**: Position, department, experience
+- **Contact Details**: Email, phone, location
+- **Skills & Education**: Professional background
+- **Social Links**: LinkedIn, GitHub, portfolio
+- **Related Employees**: Similar team members
+
+### Best Practices
+
+#### Data Management
+- **Keep information updated**: Regularly update employee details
+- **Use consistent formatting**: Follow naming conventions
+- **Upload quality images**: Use professional profile photos
+- **Verify contact information**: Ensure accuracy of contact details
+
+#### Security
+- **Strong passwords**: Use complex passwords for admin accounts
+- **Regular access review**: Periodically review user access
+- **Logout properly**: Always logout from admin panel
+- **Report issues**: Contact system administrator for problems
+
+#### User Experience
+- **Complete profiles**: Fill in all available employee information
+- **Professional descriptions**: Write clear, professional bios
+- **Regular updates**: Keep employee information current
+- **Consistent branding**: Maintain company visual identity
+
+### Troubleshooting
+
+#### Common Issues
+
+**Can't login to admin panel?**
+- Check email and password
+- Ensure you have admin access
+- Contact system administrator
+
+**Employee not showing on public site?**
+- Check if employee is marked as "Active"
+- Verify all required fields are filled
+- Check for any validation errors
+
+**Image not uploading?**
+- Ensure file is under 5MB
+- Use supported formats (JPG, PNG)
+- Check internet connection
+
+**Search not working?**
+- Try different search terms
+- Check spelling
+- Use department or skill filters
+
+#### Getting Help
+- **Technical Issues**: Contact your system administrator
+- **Access Problems**: Request access from Master user
+- **Feature Requests**: Submit through proper channels
+- **Bug Reports**: Provide detailed information about the issue
+
+---
+
+## 🚀 Quick Start
+
+### For Developers
+```bash
+git clone https://github.com/asadaa007/computan-most-wanted.git
+cd computan-most-wanted
+npm install
+# Configure .env file
+npm run dev
+```
+
+### For Users
+1. **Get login credentials** from your administrator
+2. **Visit the admin panel** at `/comp-admin`
+3. **Start managing** your team and departments
+4. **Explore features** through the sidebar navigation
+
+## ✨ Features
+
+### Public Website
+- Professional employee directory
+- Advanced search and filtering
+- SEO-optimized URLs
+- Responsive design
+
+### Admin Panel
+- Role-based access control
+- Complete employee management
+- Department organization
+- Attendance tracking
+- User administration
+- System configuration
+
+---
+
+**Computan Employee Management System** - Professional team management made simple! 🚀
