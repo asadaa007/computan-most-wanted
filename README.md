@@ -91,6 +91,9 @@ firebase deploy
 - Admin authentication required for modifications
 - Role-based access: Master > Manager > Team Lead
 
+### 📚 Technical Documentation
+For detailed technical architecture, implementation details, and advanced developer information, see [TECHNICAL_DOCUMENTATION.md](./TECHNICAL_DOCUMENTATION.md).
+
 ---
 
 ## 👥 For Users
@@ -299,41 +302,5 @@ The admin dashboard shows:
 - **Feature Requests**: Submit through proper channels
 - **Bug Reports**: Provide detailed information about the issue
 
----
-
-## 🚀 Quick Start
-
-### For Developers
-```bash
-git clone https://github.com/asadaa007/computan-most-wanted.git
-cd computan-most-wanted
-npm install
-# Configure .env file
-npm run dev
-```
-
-### For Users
-1. **Get login credentials** from your administrator
-2. **Visit the admin panel** at `/comp-admin`
-3. **Start managing** your team and departments
-4. **Explore features** through the sidebar navigation
-
-## ✨ Features
-
-### Public Website
-- Professional employee directory
-- Advanced search and filtering
-- SEO-optimized URLs
-- Responsive design
-
-### Admin Panel
-- Role-based access control
-- Complete employee management
-- Department organization
-- Attendance tracking
-- User administration
-- System configuration
-
----
 
 **Computan Employee Management System** - Professional team management made simple! 🚀

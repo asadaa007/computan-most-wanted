@@ -321,6 +321,11 @@ The Computan Employee Management System represents a modern, scalable solution f
 
 The system successfully balances public accessibility with secure administrative control, offering a professional platform for showcasing team members while providing comprehensive management tools for administrators.
 
+## 📖 Related Documentation
+
+- **[README.md](./README.md)** - Quick start guide for developers and comprehensive user manual
+- **TECHNICAL_DOCUMENTATION.md** - Detailed technical architecture and implementation (this file)
+
 ---
 
 **Document Version**: 1.0   
