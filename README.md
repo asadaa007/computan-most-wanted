@@ -9,6 +9,10 @@ A modern React TypeScript application for managing and showcasing company employ
 - [Quick Start](#-quick-start)
 - [Features](#-features)
 
+### 📚 Technical Documentation
+For detailed technical architecture, implementation details, and advanced developer information, see [TECHNICAL_DOCUMENTATION.md](./TECHNICAL_DOCUMENTATION.md).
+
+
 ## 👨‍💻 For Developers
 
 ### Tech Stack
@@ -90,9 +94,6 @@ firebase deploy
 - Public read access to employee data
 - Admin authentication required for modifications
 - Role-based access: Master > Manager > Team Lead
-
-### 📚 Technical Documentation
-For detailed technical architecture, implementation details, and advanced developer information, see [TECHNICAL_DOCUMENTATION.md](./TECHNICAL_DOCUMENTATION.md).
 
 ---
 
