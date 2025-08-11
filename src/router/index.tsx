@@ -12,6 +12,10 @@ import EditEmployee from '../pages/admin/EditEmployee';
 import FormSubmissions from '../pages/admin/FormSubmissions';
 import ManageDepartments from '../pages/admin/ManageDepartments';
 import ManageAttendance from '../pages/admin/ManageAttendance';
+import ManageProjects from '../pages/admin/ManageProjects';
+import AddProject from '../pages/admin/AddProject';
+import EditProject from '../pages/admin/EditProject';
+import ViewProject from '../pages/admin/ViewProject';
 import Settings from '../pages/admin/Settings';
 import ProtectedRoute from '../components/admin/ProtectedRoute';
 
@@ -130,6 +134,62 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <ManageAttendance />,
+      },
+    ],
+  },
+  {
+    path: '/comp-admin/projects',
+    element: (
+      <ProtectedRoute>
+        <AdminLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        index: true,
+        element: <ManageProjects />,
+      },
+    ],
+  },
+  {
+    path: '/comp-admin/projects/add',
+    element: (
+      <ProtectedRoute>
+        <AdminLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        index: true,
+        element: <AddProject />,
+      },
+    ],
+  },
+  {
+    path: '/comp-admin/projects/edit/:id',
+    element: (
+      <ProtectedRoute>
+        <AdminLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        index: true,
+        element: <EditProject />,
+      },
+    ],
+  },
+  {
+    path: '/comp-admin/projects/view/:id',
+    element: (
+      <ProtectedRoute>
+        <AdminLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        index: true,
+        element: <ViewProject />,
       },
     ],
   },

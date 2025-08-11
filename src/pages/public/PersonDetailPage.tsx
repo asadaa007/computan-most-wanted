@@ -5,6 +5,30 @@ import { db } from '../../firebase';
 import Header from '../../components/common/Header';
 import { findPersonBySlug, createPersonSlug } from '../../utils/slugify';
 
+interface Project {
+  id: string;
+  name: string;
+  description: string;
+  client: string;
+  startDate: string;
+  endDate: string | null;
+  status: 'active' | 'completed' | 'on-hold' | 'cancelled';
+  technologies: string[];
+  teamMembers: ProjectMember[];
+  createdAt: string;
+  lastModified: string;
+}
+
+interface ProjectMember {
+  employeeId: string;
+  employeeName: string;
+  role: string;
+  startDate: string;
+  endDate?: string | null;
+  hoursWorked: number;
+  isActive: boolean;
+}
+
 interface EmployeeCard {
   id: string;
   name: string;
@@ -40,6 +64,9 @@ export default function PersonDetailPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<EmployeeCard[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [showProjectHistory, setShowProjectHistory] = useState(false);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(false);
 
   const loadEmployees = async () => {
     try {
@@ -55,6 +82,63 @@ export default function PersonDetailPage() {
       setLoading(false);
     }
   };
+
+  const loadProjects = async () => {
+    if (!currentPerson) return;
+    
+    try {
+      setLoadingProjects(true);
+      const querySnapshot = await getDocs(collection(db, 'projects'));
+      const projectsData: Project[] = [];
+      querySnapshot.forEach((doc) => {
+        const project = { id: doc.id, ...doc.data() } as Project;
+        // Check if current person is a team member in this project
+        const isTeamMember = project.teamMembers.some(member => member.employeeId === currentPerson.id);
+        if (isTeamMember) {
+          projectsData.push(project);
+        }
+      });
+      setProjects(projectsData);
+    } catch (error) {
+      console.error('Error loading projects:', error);
+    } finally {
+      setLoadingProjects(false);
+    }
+  };
+
+  const handleProjectHistoryClick = () => {
+    setShowProjectHistory(true);
+    loadProjects();
+    // Prevent background scrolling
+    document.body.style.overflow = 'hidden';
+  };
+
+  const handleCloseProjectHistory = () => {
+    setShowProjectHistory(false);
+    // Restore background scrolling
+    document.body.style.overflow = 'auto';
+  };
+
+  // Clean up scroll state when component unmounts
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
+
+
+
+  const getProjectStatusBg = (status: string) => {
+    switch (status) {
+      case 'active': return 'bg-green-500';
+      case 'completed': return 'bg-blue-500';
+      case 'on-hold': return 'bg-yellow-500';
+      case 'cancelled': return 'bg-red-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
+
 
   // Load employees from Firestore
   useEffect(() => {
@@ -143,6 +227,8 @@ export default function PersonDetailPage() {
     return age;
   };
 
+
+
   // Get current set of 6 employees for display without repetition
   const getCurrentEmployees = () => {
     const result = [];
@@ -213,9 +299,6 @@ export default function PersonDetailPage() {
             {/* Navigation */}
             <div className="bg-primary-400 p-4 mb-4">
               <Link to="/" className="flex items-center space-x-2 text-white hover:text-primary-400 transition-colors">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7 7" />
-                </svg>
                 <span className="font-semibold text-sm">HOME</span>
               </Link>
             </div>
@@ -311,7 +394,7 @@ export default function PersonDetailPage() {
                   <div className="grid grid-cols-3 gap-3">
                     <div className="bg-white/20 backdrop-blur-sm p-3 border-l-2 border-black">
                       <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">POSITION</label>
-                      <p className="text-sm font-semibold text-black">{currentPerson.position}</p>
+                      <p className="text-sm font-semibold text-black">{currentPerson.department}</p>
                     </div>
                     <div className="bg-white/20 backdrop-blur-sm p-3 border-l-2 border-black">
                       <label className="block text-xs font-bold text-black uppercase tracking-wider mb-1">DEPARTMENT</label>
@@ -383,7 +466,18 @@ export default function PersonDetailPage() {
               <div className="grid grid-cols-1 lg:grid-cols-5">
                 {/* Left Column - Attendance Details */}
                 <div className="lg:col-span-2 p-6 bg-secondary-100">
-                  <h3 className="text-2xl font-medium text-gray-500 mb-8 tracking-wide">ATTENDANCE DETAILS</h3>
+                  <h3 className="text-2xl font-medium text-gray-500 mb-4 tracking-wide">ATTENDANCE DETAILS</h3>
+                  
+                  {/* Project History Button */}
+                  <div className="mb-6">
+                    <button
+                      onClick={handleProjectHistoryClick}
+                      className="w-full bg-primary-400 text-black py-3 px-4 font-semibold hover:bg-primary-500 transition-all duration-300 transform hover:scale-105 shadow-lg"
+                    >
+                      <i className="fas fa-history mr-2"></i>
+                      VIEW PROJECT HISTORY
+                    </button>
+                  </div>
                   
                   {/* Current Status */}
                   <div className="space-y-6">
@@ -536,6 +630,8 @@ export default function PersonDetailPage() {
                     </div>
                   </div>
 
+
+
                   <div className="mt-8 flex items-center space-x-2">
                     <img
                       src={currentPerson.flag}
@@ -608,6 +704,139 @@ export default function PersonDetailPage() {
       <footer className="bg-secondary-800 text-gray-400 text-center py-4 text-sm">
         © 2025 Computan's most wanted All rights reserved.
       </footer>
+
+            {/* Project History Modal */}
+      {showProjectHistory && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4"
+          onClick={handleCloseProjectHistory}
+        >
+          <div 
+            className="bg-transparent border-none text-secondary-800 w-full max-w-6xl max-h-[100vh] overflow-y-auto border border-secondary-300 shadow-2xl scrollbar-hide p-24"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="bg-primary-400 border-none p-6 fixed top-0 left-0 w-full z-50 border-b border-secondary-300">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-3xl font-bold text-black mb-2">
+                    <i className="fas fa-rocket mr-3"></i>
+                    PROJECT HISTORY TIMELINE
+                  </h2>
+                  <p className="text-black text-lg">
+                    {currentPerson.name} • Project Records
+                  </p>
+                </div>
+                <button
+                  onClick={handleCloseProjectHistory}
+                  className="text-black hover:text-secondary-700 text-2xl transition-colors"
+                >
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6">
+              {loadingProjects ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <div className="animate-spin h-12 w-12 border-b-2 border-primary-400 mx-auto mb-4"></div>
+                    <p className="text-secondary-700 text-lg">Loading project data...</p>
+                  </div>
+                </div>
+              ) : projects.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">🚀</div>
+                  <h3 className="text-2xl font-bold text-secondary-800 mb-2">No Projects Found</h3>
+                  <p className="text-secondary-600">This team member hasn't been assigned to any projects yet.</p>
+                </div>
+              ) : (
+                <div className="relative max-w-4xl mx-auto h-100vh">
+                  {/* Center Timeline Bar */}
+                  <div className="absolute left-1/2 transform -translate-x-1/2 w-1 bg-gradient-to-b from-primary-400 to-secondary-600 h-full"></div>
+                  
+                  {/* Project Cards */}
+                  <div className="space-y-16">
+                    {projects
+                      .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()) // Sort by start date (newest first)
+                      .map((project, index) => {
+                      const memberInfo = project.teamMembers.find(member => member.employeeId === currentPerson.id);
+                      const isEven = index % 2 === 0;
+                      
+                      return (
+                        <div key={project.id} className={`relative flex items-center ${isEven ? 'justify-start' : 'justify-end'}`}>
+                          {/* Timeline Dot */}
+                          <div className={`absolute left-1/2 transform -translate-x-1/2 w-4 h-4 ${getProjectStatusBg(project.status)} border-2 border-white shadow-lg z-10`}></div>
+                          
+                          {/* Connecting Line */}
+                          <div className={`absolute top-1/2 transform -translate-y-1/2 h-0.5 ${isEven ? 'right-1/2 w-32 bg-gradient-to-l from-secondary-600 to-secondary-400' : 'left-1/2 w-32 bg-gradient-to-r from-secondary-600 to-secondary-400'}`}></div>
+                          
+                          {/* Project Card */}
+                          <div className={`w-80 bg-white border border-secondary-300 shadow-lg p-6 ${isEven ? 'mr-auto' : 'ml-auto'}`}>
+                            {/* Project Start Date */}
+                            <div className="mb-3">
+                              <div className="text-xs text-secondary-500 uppercase tracking-wide font-semibold">
+                                {new Date(project.startDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                              </div>
+                            </div>
+                            
+                            {/* Project Name */}
+                            <h3 className="text-xl font-bold text-secondary-800 mb-3">{project.name}</h3>
+                  
+                            {/* Technologies */}
+                            {project.technologies.length > 0 && (
+                              <div className="mb-4">
+                                <div className="flex flex-wrap gap-2">
+                                  {project.technologies.map((tech, techIndex) => (
+                                    <span key={techIndex} className="px-2 py-1 bg-secondary-100 text-secondary-700 text-xs font-medium">
+                                      {tech}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                  
+                            {/* Role and Hours */}
+                            {memberInfo && (
+                              <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm text-secondary-600">Role:</span>
+                                  <span className="text-sm font-semibold text-secondary-800">{memberInfo.role}</span>
+                                </div>
+                                {memberInfo.hoursWorked > 0 && (
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-sm text-secondary-600">Hours:</span>
+                                    <span className="text-sm font-semibold text-secondary-800">{memberInfo.hoursWorked}h</span>
+                                  </div>
+                                )}
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm text-secondary-600">Status:</span>
+                                  <span className={`text-xs px-2 py-1 font-bold ${getProjectStatusBg(project.status)} text-white`}>
+                                    {project.status.toUpperCase()}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                  
+                            {/* Current Person Name */}
+                            <div className="mt-4 pt-3 border-t border-secondary-200">
+                              <div className="flex items-center gap-2">
+                                <i className="fas fa-user text-primary-400"></i>
+                                <span className="text-sm font-medium text-secondary-800">{currentPerson.name}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

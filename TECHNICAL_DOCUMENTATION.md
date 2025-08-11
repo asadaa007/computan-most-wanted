@@ -99,6 +99,14 @@ A comprehensive admin panel with role-based access control for managing all aspe
 - **Security Settings**: Authentication and access control
 - **System Settings**: Application-wide configurations
 
+##### Project Management (`src/pages/admin/ManageProjects.tsx`, `src/pages/admin/AddProject.tsx`, `src/pages/admin/EditProject.tsx`)
+- **Project CRUD Operations**: Create, read, update, delete projects
+- **Team Member Management**: Add/remove team members with roles and dates
+- **Project Status Tracking**: Active, completed, on-hold, cancelled
+- **Technology Stack Management**: Track technologies used in projects
+- **Client Management**: Organize projects by client
+- **Advanced Filtering**: Search and filter projects by various criteria
+
 ##### Form Submissions (`src/pages/admin/FormSubmissions.tsx`)
 - Public inquiry management
 - Contact form submissions
@@ -216,6 +224,33 @@ interface AttendanceRecord {
   totalHours?: number;
   status: 'present' | 'absent' | 'leave';
   notes?: string;
+}
+```
+
+#### 7. `projects`
+```typescript
+interface Project {
+  id?: string;
+  name: string;
+  description: string;
+  client: string;
+  startDate: string;
+  endDate: string;
+  status: 'active' | 'completed' | 'on-hold' | 'cancelled';
+  technologies: string[];
+  teamMembers: ProjectMember[];
+  createdAt: string;
+  lastModified: string;
+}
+
+interface ProjectMember {
+  employeeId: string;
+  employeeName: string;
+  role: string;
+  startDate: string;
+  endDate?: string;
+  hoursWorked: number;
+  isActive: boolean;
 }
 ```
 

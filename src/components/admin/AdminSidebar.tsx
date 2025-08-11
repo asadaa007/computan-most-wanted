@@ -28,6 +28,7 @@ interface AdminUser {
 const navigation: NavItem[] = [
   { name: 'Dashboard', path: '/comp-admin/dashboard', icon: 'fas fa-chart-line' },
   { name: 'Team', path: '/comp-admin/employees', icon: 'fas fa-users' },
+  { name: 'Projects', path: '/comp-admin/projects', icon: 'fas fa-project-diagram' },
   { name: 'Departments', path: '/comp-admin/departments', icon: 'fas fa-building' },
   { name: 'Attendance', path: '/comp-admin/attendance', icon: 'fas fa-clock' },
   { name: 'Form Submissions', path: '/comp-admin/submissions', icon: 'fas fa-envelope' },
@@ -81,7 +82,7 @@ export default function AdminSidebar() {
       isCollapsed ? 'w-16' : 'w-64'
     }`}>
       {/* Header */}
-      <div className="p-3 border-b border-secondary-300">
+      <div className="p-5 border-b border-secondary-300">
         <div className="flex items-center justify-between">
           {!isCollapsed && (
             <div className="flex items-center space-x-3">
